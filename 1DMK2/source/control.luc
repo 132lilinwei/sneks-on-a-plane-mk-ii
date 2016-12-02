@@ -1,0 +1,27 @@
+module control (
+    input clk,  // clock
+    input rst,  // reset
+    output rowOut[7],
+    output colOut[7]
+  ) {
+  
+  dff row[7](.clk(clk), .rst(rst));
+  dff col[7](.clk(clk), .rst(rst));
+  
+  always {
+    row.d = row.q;
+    col.d = col.q;
+    
+    
+    if(col.q >= 80){
+      col.d = 0;
+      if(row.q == 15) row.d = 0;
+      else row.d = row.q + 1;
+    }
+    else col.d = col.q + 1;
+    
+    
+    rowOut = row.q;
+    colOut = col.q;
+  }
+}

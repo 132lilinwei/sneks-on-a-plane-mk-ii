@@ -1,0 +1,85 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,      // AVR RX buffer full
+    input joystickaUp,
+    input joystickaDown,
+    input joystickaLeft,
+    input joystickaRight,
+    input joystickbUp,
+    input joystickbDown,
+    input joystickbLeft,
+    input joystickbRight,
+    input start,
+    output r0,
+    output r1,
+    output g0,
+    output g1,
+    output bl0,
+    output bl1,
+    output latch,
+    output rowsel0,
+    output rowsel1,
+    output rowsel2,
+    output rowsel3,
+    output dispclk,
+    output blank
+  ) {
+  
+  sig rst;                  // reset signal
+  
+  process process;
+  
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+  }
+  
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+    
+    led = 8h00;             // turn LEDs off
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+    
+    process.start = ~start;
+    process.joystickaLeft = joystickaLeft;
+    process.joystickaUp = joystickaUp;
+    process.joystickaRight = joystickaRight;
+    process.joystickaDown = joystickaDown;
+    process.joystickbLeft = joystickbLeft;
+    process.joystickbUp = joystickbUp;
+    process.joystickbRight = joystickbRight;
+    process.joystickbDown = joystickbDown;
+    process.clk = clk;
+    process.rst = rst;
+    r0 = process.r0;
+    g0 = process.g0;
+    bl0 = process.bl0;
+    r1 = process.r1;
+    g1 = process.g1;
+    bl1 = process.bl1;
+    latch = process.latch;
+    blank = process.blank;
+    rowsel0 = process.rowsel[0];
+    rowsel1 = process.rowsel[1];
+    rowsel2 = process.rowsel[2];
+    rowsel3 = process.rowsel[3];
+    dispclk = process.dclk;
+    
+    led[7] = start;
+    led[6:0] = process.debug;
+  }
+}
