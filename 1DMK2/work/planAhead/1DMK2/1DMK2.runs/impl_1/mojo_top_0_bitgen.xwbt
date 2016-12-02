@@ -1,8 +1,8 @@
 INTSTYLE=pa
-INFILE=C:\Users\Wei Ren\Documents\mojo\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1\mojo_top_0_routed.ncd
-OUTFILE=C:\Users\Wei Ren\Documents\mojo\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1\mojo_top_0.bit
+INFILE=C:\Users\Wei Ren\Documents\GitHub\sneks-on-a-plane-mk-ii\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1\mojo_top_0_routed.ncd
+OUTFILE=C:\Users\Wei Ren\Documents\GitHub\sneks-on-a-plane-mk-ii\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1\mojo_top_0.bit
 FAMILY=Spartan6
 PART=xc6slx9-2tqg144
-WORKINGDIR=C:\Users\Wei Ren\Documents\mojo\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1
+WORKINGDIR=C:\Users\Wei Ren\Documents\GitHub\sneks-on-a-plane-mk-ii\1DMK2\work\planAhead\1DMK2\1DMK2.runs\impl_1
 LICENSE=WebPack
 USER_INFO=__0_0_0

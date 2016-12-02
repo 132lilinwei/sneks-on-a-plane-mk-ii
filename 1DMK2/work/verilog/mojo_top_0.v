@@ -8,15 +8,9 @@ module mojo_top_0 (
     input clk,
     input rst_n,
     output reg [7:0] led,
-    input cclk,
     output reg spi_miso,
-    input spi_ss,
-    input spi_mosi,
-    input spi_sck,
     output reg [3:0] spi_channel,
-    input avr_tx,
     output reg avr_rx,
-    input avr_rx_busy,
     input joystickaUp,
     input joystickaDown,
     input joystickaLeft,
@@ -54,7 +48,6 @@ module mojo_top_0 (
   wire [1-1:0] M_process_latch;
   wire [1-1:0] M_process_blank;
   wire [4-1:0] M_process_rowsel;
-  wire [8-1:0] M_process_debug;
   wire [1-1:0] M_process_dclk;
   reg [1-1:0] M_process_clk;
   reg [1-1:0] M_process_rst;
@@ -88,7 +81,6 @@ module mojo_top_0 (
     .latch(M_process_latch),
     .blank(M_process_blank),
     .rowsel(M_process_rowsel),
-    .debug(M_process_debug),
     .dclk(M_process_dclk)
   );
   
@@ -131,7 +123,5 @@ module mojo_top_0 (
     rowsel2 = M_process_rowsel[2+0-:1];
     rowsel3 = M_process_rowsel[3+0-:1];
     dispclk = M_process_dclk;
-    led[7+0-:1] = start;
-    led[0+6-:7] = M_process_debug;
   end
 endmodule

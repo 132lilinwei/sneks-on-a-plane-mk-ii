@@ -1,0 +1,9 @@
+module mult (
+    input a[8], //8-bit input
+    input b[8],
+    output out[8] //8-bit output
+  ) {
+  always {
+    out = a * b; //multiply a and b
+  }
+}

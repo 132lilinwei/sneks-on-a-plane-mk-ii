@@ -1,0 +1,18 @@
+   module comp (
+    input z,
+    input v,
+    input n,
+    input c[2], //opcode [2:1]
+    output out[8] 
+  ) {
+
+  always {
+    case (c[1:0]){
+      0: out[0] = 0 ;//unused
+      1: out[0] = z; //cmpeq
+      2: out[0] = n ^ v; //cmplt
+      3: out[0] = z | (n ^ v); //cmple
+      default: out[0] = 0 ; // defaulting to 0
+    }
+  }
+}

@@ -25,7 +25,6 @@ module process_1 (
     output reg latch,
     output reg blank,
     output reg [3:0] rowsel,
-    output reg [7:0] debug,
     output reg dclk
   );
   
@@ -33,7 +32,11 @@ module process_1 (
   
   localparam SPEED = 2'h3;
   
-  reg [31:0] M_gclk_d, M_gclk_q = 1'h0;
+  reg [15:0] M_gclk_d, M_gclk_q = 1'h0;
+  
+  reg [31:0] M_growclk_d, M_growclk_q = 1'h0;
+  
+  reg [18:0] M_sclk_d, M_sclk_q = 19'h61a80;
   
   localparam GROWTH = 3'h4;
   
@@ -43,13 +46,13 @@ module process_1 (
   
   localparam KILL = 4'hf;
   
-  reg [447:0] M_arow_d, M_arow_q = 1'h0;
+  reg [319:0] M_arow_d, M_arow_q = 1'h0;
   
-  reg [447:0] M_acol_d, M_acol_q = 1'h0;
+  reg [383:0] M_acol_d, M_acol_q = 1'h0;
   
-  reg [447:0] M_brow_d, M_brow_q = 1'h0;
+  reg [319:0] M_brow_d, M_brow_q = 1'h0;
   
-  reg [447:0] M_bcol_d, M_bcol_q = 1'h0;
+  reg [383:0] M_bcol_d, M_bcol_q = 1'h0;
   
   reg [63:0] M_atop_d, M_atop_q = 1'h0;
   
@@ -63,13 +66,13 @@ module process_1 (
   
   reg [5:0] M_blen_d, M_blen_q = 1'h0;
   
-  reg [0:0] M_alethal_d, M_alethal_q = 1'h0;
+  reg [0:0] M_alethal_d, M_alethal_q = 1'h1;
   
-  reg [0:0] M_blethal_d, M_blethal_q = 1'h0;
+  reg [0:0] M_blethal_d, M_blethal_q = 1'h1;
   
-  reg [6:0] M_approw_d, M_approw_q = 1'h0;
+  reg [4:0] M_approw_d, M_approw_q = 1'h0;
   
-  reg [6:0] M_appcol_d, M_appcol_q = 1'h0;
+  reg [5:0] M_appcol_d, M_appcol_q = 1'h0;
   
   reg M_walltop_d, M_walltop_q = 1'h0;
   
@@ -79,6 +82,10 @@ module process_1 (
   
   reg M_applebot_d, M_applebot_q = 1'h0;
   
+  reg M_rtop_d, M_rtop_q = 1'h0;
+  
+  reg M_rbot_d, M_rbot_q = 1'h0;
+  
   reg [3:0] M_adirection_d, M_adirection_q = 4'h4;
   
   reg [3:0] M_bdirection_d, M_bdirection_q = 4'h1;
@@ -87,23 +94,23 @@ module process_1 (
   
   reg [1:0] M_lastbDirection_d, M_lastbDirection_q = 2'h0;
   
-  reg [7:0] M_ascore_d, M_ascore_q = 1'h0;
+  reg [7:0] M_ascore_d, M_ascore_q = 8'h00;
   
-  reg [7:0] M_bscore_d, M_bscore_q = 1'h0;
+  reg [7:0] M_bscore_d, M_bscore_q = 8'h00;
   
-  reg [7:0] M_aaddscore_d, M_aaddscore_q = 1'h0;
+  reg [7:0] M_aaddscore_d, M_aaddscore_q = 8'h00;
   
-  reg [7:0] M_baddscore_d, M_baddscore_q = 1'h0;
+  reg [7:0] M_baddscore_d, M_baddscore_q = 8'h00;
   
-  reg [7:0] M_aapplescore_d, M_aapplescore_q = 1'h0;
+  reg [7:0] M_aapplescore_d, M_aapplescore_q = 8'h00;
   
-  reg [7:0] M_bapplescore_d, M_bapplescore_q = 1'h0;
+  reg [7:0] M_bapplescore_d, M_bapplescore_q = 8'h00;
   
-  reg [7:0] M_asubscore_d, M_asubscore_q = 1'h0;
+  reg [7:0] M_asubscore_d, M_asubscore_q = 8'h00;
   
-  reg [7:0] M_bsubscore_d, M_bsubscore_q = 1'h0;
+  reg [7:0] M_bsubscore_d, M_bsubscore_q = 8'h00;
   
-  reg [31:0] M_counter_d, M_counter_q = 1'h0;
+  reg [19:0] M_counter_d, M_counter_q = 1'h0;
   
   integer count;
   
@@ -113,15 +120,33 @@ module process_1 (
   
   reg [1:0] bdir;
   
-  reg [6:0] row;
+  reg [3:0] row;
   
   reg [6:0] col;
   
-  reg [6:0] randrow;
+  reg [4:0] M_randrow_d, M_randrow_q = 1'h0;
   
-  reg [6:0] randcol;
+  reg [5:0] M_randcol_d, M_randcol_q = 1'h0;
   
-  wire [7-1:0] M_control_rowOut;
+  reg [0:0] M_cmp_d, M_cmp_q = 1'h0;
+  
+  reg aonetop;
+  
+  reg aonebot;
+  
+  reg atentop;
+  
+  reg atenbot;
+  
+  reg bonetop;
+  
+  reg bonebot;
+  
+  reg btentop;
+  
+  reg btenbot;
+  
+  wire [4-1:0] M_control_rowOut;
   wire [7-1:0] M_control_colOut;
   reg [1-1:0] M_control_clk;
   reg [1-1:0] M_control_rst;
@@ -132,15 +157,55 @@ module process_1 (
     .colOut(M_control_colOut)
   );
   
-  wire [7-1:0] M_random_randrow;
-  wire [7-1:0] M_random_randcol;
-  reg [1-1:0] M_random_clk;
-  reg [1-1:0] M_random_rst;
-  random_4 random (
-    .clk(M_random_clk),
-    .rst(M_random_rst),
-    .randrow(M_random_randrow),
-    .randcol(M_random_randcol)
+  wire [11-1:0] M_alu_out;
+  reg [8-1:0] M_alu_a;
+  reg [8-1:0] M_alu_b;
+  reg [6-1:0] M_alu_c;
+  alu_4 alu (
+    .a(M_alu_a),
+    .b(M_alu_b),
+    .c(M_alu_c),
+    .out(M_alu_out)
+  );
+  
+  wire [10-1:0] M_pn_num;
+  reg [1-1:0] M_pn_clk;
+  reg [1-1:0] M_pn_rst;
+  reg [1-1:0] M_pn_next;
+  reg [32-1:0] M_pn_seed;
+  pn_gen_5 pn (
+    .clk(M_pn_clk),
+    .rst(M_pn_rst),
+    .next(M_pn_next),
+    .seed(M_pn_seed),
+    .num(M_pn_num)
+  );
+  
+  wire [1-1:0] M_drawer_aonetop;
+  wire [1-1:0] M_drawer_aonebot;
+  wire [1-1:0] M_drawer_atentop;
+  wire [1-1:0] M_drawer_atenbot;
+  wire [1-1:0] M_drawer_bonetop;
+  wire [1-1:0] M_drawer_bonebot;
+  wire [1-1:0] M_drawer_btentop;
+  wire [1-1:0] M_drawer_btenbot;
+  reg [5-1:0] M_drawer_row;
+  reg [7-1:0] M_drawer_col;
+  reg [8-1:0] M_drawer_ascore;
+  reg [8-1:0] M_drawer_bscore;
+  drawer_6 drawer (
+    .row(M_drawer_row),
+    .col(M_drawer_col),
+    .ascore(M_drawer_ascore),
+    .bscore(M_drawer_bscore),
+    .aonetop(M_drawer_aonetop),
+    .aonebot(M_drawer_aonebot),
+    .atentop(M_drawer_atentop),
+    .atenbot(M_drawer_atenbot),
+    .bonetop(M_drawer_bonetop),
+    .bonebot(M_drawer_bonebot),
+    .btentop(M_drawer_btentop),
+    .btenbot(M_drawer_btenbot)
   );
   
   always @* begin
@@ -149,13 +214,20 @@ module process_1 (
     M_blen_d = M_blen_q;
     M_aapplescore_d = M_aapplescore_q;
     M_atop_d = M_atop_q;
+    M_randcol_d = M_randcol_q;
     M_applebot_d = M_applebot_q;
+    M_cmp_d = M_cmp_q;
     M_adirection_d = M_adirection_q;
+    M_sclk_d = M_sclk_q;
     M_arow_d = M_arow_q;
-    M_bcol_d = M_bcol_q;
+    M_rbot_d = M_rbot_q;
     M_approw_d = M_approw_q;
+    M_bcol_d = M_bcol_q;
+    M_randrow_d = M_randrow_q;
     M_lastbDirection_d = M_lastbDirection_q;
+    M_rtop_d = M_rtop_q;
     M_asubscore_d = M_asubscore_q;
+    M_bscore_d = M_bscore_q;
     M_bbot_d = M_bbot_q;
     M_brow_d = M_brow_q;
     M_bsubscore_d = M_bsubscore_q;
@@ -165,21 +237,33 @@ module process_1 (
     M_appletop_d = M_appletop_q;
     M_bapplescore_d = M_bapplescore_q;
     M_counter_d = M_counter_q;
+    M_growclk_d = M_growclk_q;
     M_acol_d = M_acol_q;
     M_blethal_d = M_blethal_q;
     M_aaddscore_d = M_aaddscore_q;
     M_alen_d = M_alen_q;
     M_bdirection_d = M_bdirection_q;
+    M_walltop_d = M_walltop_q;
     M_alethal_d = M_alethal_q;
     M_gclk_d = M_gclk_q;
-    M_walltop_d = M_walltop_q;
+    M_ascore_d = M_ascore_q;
     M_btop_d = M_btop_q;
     M_wallbot_d = M_wallbot_q;
     
     M_gclk_d = M_gclk_q + 1'h1;
+    M_growclk_d = M_growclk_q + 1'h1;
     M_counter_d = M_counter_q + 1'h1;
-    debug[0+7-:8] = M_arow_q[0+6-:7];
-    if (M_counter_q == 18'h30d40) begin
+    if (M_sclk_q > 10'h3e8) begin
+      M_sclk_d = M_sclk_q - 1'h1;
+    end else begin
+      M_sclk_d = M_sclk_q;
+    end
+    if (M_growclk_q[31+0-:1]) begin
+      M_alen_d = M_alen_q + 1'h1;
+      M_blen_d = M_blen_q + 1'h1;
+      M_growclk_d = 1'h0;
+    end
+    if ((M_counter_q >= 18'h30d40) && (M_counter_q > M_sclk_q)) begin
       M_move_d = 1'h1;
       M_counter_d = 1'h0;
     end else begin
@@ -189,31 +273,54 @@ module process_1 (
     M_control_rst = rst;
     row = M_control_rowOut;
     col = M_control_colOut;
-    M_random_clk = M_gclk_q[3+0-:1];
-    M_random_rst = rst;
-    randrow = M_random_randrow;
-    randcol = M_random_randcol;
+    M_pn_clk = clk;
+    M_pn_rst = rst;
+    M_pn_seed = 1'h0;
+    M_pn_next = 1'h1;
+    M_alu_a = 1'h0;
+    M_alu_b = 1'h0;
+    M_alu_c = 1'h0;
+    M_drawer_row = row;
+    M_drawer_col = col;
+    M_drawer_ascore = M_ascore_q;
+    M_drawer_bscore = M_bscore_q;
     M_adirection_d = M_adirection_q;
     M_bdirection_d = M_bdirection_q;
     M_alethal_d = M_alethal_q;
     M_blethal_d = M_blethal_q;
+    M_ascore_d = M_ascore_q;
+    M_bscore_d = M_bscore_q;
+    M_randrow_d = M_randrow_q;
+    M_randcol_d = M_randcol_q;
+    M_aaddscore_d = M_aaddscore_q;
+    M_aapplescore_d = M_aapplescore_q;
+    M_asubscore_d = M_asubscore_q;
+    M_baddscore_d = M_baddscore_q;
+    M_bapplescore_d = M_bapplescore_q;
+    M_bsubscore_d = M_bsubscore_q;
     if (~joystickaLeft | ~joystickaUp | ~joystickaRight | ~joystickaDown) begin
       M_adirection_d[0+0-:1] = ~joystickaLeft;
       M_adirection_d[1+0-:1] = ~joystickaUp;
       M_adirection_d[2+0-:1] = ~joystickaRight;
       M_adirection_d[3+0-:1] = ~joystickaDown;
     end
+    if (~joystickbLeft | ~joystickbUp | ~joystickbRight | ~joystickbDown) begin
+      M_bdirection_d[0+0-:1] = ~joystickbLeft;
+      M_bdirection_d[1+0-:1] = ~joystickbUp;
+      M_bdirection_d[2+0-:1] = ~joystickbRight;
+      M_bdirection_d[3+0-:1] = ~joystickbDown;
+    end
     if (start) begin
       M_counter_d = 1'h0;
-      M_arow_d[0+6-:7] = 4'hf;
-      M_acol_d[0+6-:7] = 5'h14;
-      M_brow_d[0+6-:7] = 5'h10;
-      M_bcol_d[0+6-:7] = 6'h2b;
+      M_arow_d[0+4-:5] = 4'hf;
+      M_acol_d[0+5-:6] = 5'h14;
+      M_brow_d[0+4-:5] = 5'h10;
+      M_bcol_d[0+5-:6] = 6'h2b;
       for (count = 1'h1; count < 7'h40; count = count + 1) begin
-        M_arow_d[(count)*7+6-:7] = 1'h0;
-        M_acol_d[(count)*7+6-:7] = 1'h0;
-        M_brow_d[(count)*7+6-:7] = 1'h0;
-        M_bcol_d[(count)*7+6-:7] = 1'h0;
+        M_arow_d[(count)*5+4-:5] = 1'h0;
+        M_acol_d[(count)*6+5-:6] = 1'h0;
+        M_brow_d[(count)*5+4-:5] = 1'h0;
+        M_bcol_d[(count)*6+5-:6] = 1'h0;
       end
       M_adirection_d = 4'h4;
       M_bdirection_d = 4'h1;
@@ -221,22 +328,30 @@ module process_1 (
       M_blen_d = 4'h8;
       M_alethal_d = 1'h0;
       M_blethal_d = 1'h0;
-      M_approw_d = randrow;
-      M_appcol_d = randcol;
+      M_randrow_d = M_pn_num[0+4-:5];
+      M_randcol_d = M_pn_num[5+4-:5] + 5'h10;
+      M_approw_d = M_randrow_q;
+      M_appcol_d = M_randcol_q;
       M_lastaDirection_d = 2'h2;
       M_lastbDirection_d = 1'h0;
       M_move_d = 1'h1;
+      M_aaddscore_d = 1'h0;
+      M_aapplescore_d = 1'h0;
+      M_asubscore_d = 1'h0;
+      M_baddscore_d = 1'h0;
+      M_bapplescore_d = 1'h0;
+      M_bsubscore_d = 1'h0;
     end else begin
       if (~M_alethal_q && ~M_blethal_q) begin
         if (M_move_q) begin
           for (count = 1'h1; count < 7'h40; count = count + 1) begin
             if (M_alen_q > count) begin
-              M_arow_d[(count)*7+6-:7] = M_arow_q[(count - 1'h1)*7+6-:7];
-              M_acol_d[(count)*7+6-:7] = M_acol_q[(count - 1'h1)*7+6-:7];
+              M_arow_d[(count)*5+4-:5] = M_arow_q[(count - 1'h1)*5+4-:5];
+              M_acol_d[(count)*6+5-:6] = M_acol_q[(count - 1'h1)*6+5-:6];
             end
             if (M_blen_q > count) begin
-              M_brow_d[(count)*7+6-:7] = M_brow_q[(count - 1'h1)*7+6-:7];
-              M_bcol_d[(count)*7+6-:7] = M_bcol_q[(count - 1'h1)*7+6-:7];
+              M_brow_d[(count)*5+4-:5] = M_brow_q[(count - 1'h1)*5+4-:5];
+              M_bcol_d[(count)*6+5-:6] = M_bcol_q[(count - 1'h1)*6+5-:6];
             end
           end
           
@@ -340,16 +455,16 @@ module process_1 (
           
           case (adir)
             1'h0: begin
-              M_acol_d[0+6-:7] = M_acol_q[0+6-:7] - 1'h1;
+              M_acol_d[0+5-:6] = M_acol_q[0+5-:6] - 1'h1;
             end
             1'h1: begin
-              M_arow_d[0+6-:7] = M_arow_q[0+6-:7] - 1'h1;
+              M_arow_d[0+4-:5] = M_arow_q[0+4-:5] - 1'h1;
             end
             2'h2: begin
-              M_acol_d[0+6-:7] = M_acol_q[0+6-:7] + 1'h1;
+              M_acol_d[0+5-:6] = M_acol_q[0+5-:6] + 1'h1;
             end
             2'h3: begin
-              M_arow_d[0+6-:7] = M_arow_q[0+6-:7] + 1'h1;
+              M_arow_d[0+4-:5] = M_arow_q[0+4-:5] + 1'h1;
             end
           endcase
           
@@ -453,29 +568,29 @@ module process_1 (
           
           case (bdir)
             1'h0: begin
-              M_bcol_d[0+6-:7] = M_bcol_q[0+6-:7] - 1'h1;
+              M_bcol_d[0+5-:6] = M_bcol_q[0+5-:6] - 1'h1;
             end
             1'h1: begin
-              M_brow_d[0+6-:7] = M_brow_q[0+6-:7] - 1'h1;
+              M_brow_d[0+4-:5] = M_brow_q[0+4-:5] - 1'h1;
             end
             2'h2: begin
-              M_bcol_d[0+6-:7] = M_bcol_q[0+6-:7] + 1'h1;
+              M_bcol_d[0+5-:6] = M_bcol_q[0+5-:6] + 1'h1;
             end
             2'h3: begin
-              M_brow_d[0+6-:7] = M_brow_q[0+6-:7] + 1'h1;
+              M_brow_d[0+4-:5] = M_brow_q[0+4-:5] + 1'h1;
             end
           endcase
           M_move_d = 1'h0;
         end else begin
-          if ((M_arow_q[0+6-:7] == M_approw_q) && (M_acol_q[0+6-:7] == M_appcol_q)) begin
-            M_approw_d = 1'h0;
-            M_appcol_d = 1'h0;
+          if ((M_arow_q[0+4-:5] == M_approw_q) && (M_acol_q[0+5-:6] == M_appcol_q)) begin
+            M_approw_d = M_randrow_q;
+            M_appcol_d = M_randcol_q;
             M_aapplescore_d = M_aapplescore_q + 4'ha;
             if (M_alen_q < 8'h3c) begin
               M_alen_d = M_alen_q + 3'h4;
             end
           end else begin
-            if ((M_arow_q[0+6-:7] == 1'h0) || (M_arow_q[0+6-:7] == 5'h1f) || (M_acol_q[0+6-:7] == 5'h10) || (M_acol_q[0+6-:7] == 6'h2f)) begin
+            if ((M_arow_q[0+4-:5] == 1'h0) || (M_arow_q[0+4-:5] == 5'h1f) || (M_acol_q[0+5-:6] == 5'h10) || (M_acol_q[0+5-:6] == 6'h2f)) begin
               M_alethal_d = 1'h1;
               M_asubscore_d = M_asubscore_q + 3'h5;
             end else begin
@@ -491,15 +606,15 @@ module process_1 (
               end
             end
           end
-          if ((M_brow_q[0+6-:7] == M_approw_q) && (M_bcol_q[0+6-:7] == M_appcol_q)) begin
-            M_approw_d = 1'h0;
-            M_appcol_d = 1'h0;
+          if ((M_brow_q[0+4-:5] == M_approw_q) && (M_bcol_q[0+5-:6] == M_appcol_q)) begin
+            M_approw_d = M_randrow_q;
+            M_appcol_d = M_randcol_q;
             M_bapplescore_d = M_bapplescore_q + 4'ha;
             if (M_blen_q < 8'h3c) begin
               M_blen_d = M_blen_q + 3'h4;
             end
           end else begin
-            if ((M_brow_q[0+6-:7] == 1'h0) || (M_brow_q[0+6-:7] == 5'h1f) || (M_bcol_q[0+6-:7] == 5'h10) || (M_bcol_q[0+6-:7] == 6'h2f)) begin
+            if ((M_brow_q[0+4-:5] == 1'h0) || (M_brow_q[0+4-:5] == 5'h1f) || (M_bcol_q[0+5-:6] == 5'h10) || (M_bcol_q[0+5-:6] == 6'h2f)) begin
               M_blethal_d = 1'h1;
               M_bsubscore_d = M_bsubscore_q + 3'h5;
             end else begin
@@ -515,20 +630,113 @@ module process_1 (
               end
             end
           end
+          if ((M_brow_q[0+4-:5] == M_arow_q[0+4-:5]) & (M_acol_q[0+5-:6] == M_bcol_q[0+5-:6])) begin
+            M_alethal_d = 1'h1;
+            M_blethal_d = 1'h1;
+            M_asubscore_d = M_asubscore_q + 3'h5;
+            M_bsubscore_d = M_bsubscore_q + 3'h5;
+          end
+          if (((|M_atop_q[0+63-:64] & M_rtop_q)) | ((|M_abot_q[0+63-:64] & M_rbot_q)) | ((|M_btop_q[0+63-:64] & M_rtop_q)) | ((|M_bbot_q[0+63-:64] & M_rbot_q)) | (M_walltop_q & M_rtop_q) | (M_wallbot_q & M_rbot_q)) begin
+            M_randrow_d = M_pn_num[0+4-:5];
+            M_randcol_d = M_pn_num[5+4-:5] + 5'h10;
+          end
         end
       end
     end
+    M_rtop_d = ((row == M_randrow_q) & (col == M_randcol_q));
+    M_rbot_d = ((row + 5'h10 == M_randrow_q) & (col == M_randcol_q));
     M_walltop_d = (((row == 1'h0) || (col == 5'h10) || (col == 6'h2f)) && ((col <= 6'h2f) && (col >= 5'h10)));
     M_wallbot_d = (((row + 5'h10 == 5'h1f) || (col == 5'h10) || (col == 6'h2f)) && ((col <= 6'h2f) && (col >= 5'h10)));
     M_appletop_d = (row == M_approw_q) & (col == M_appcol_q);
     M_applebot_d = (row + 5'h10 == M_approw_q) & (col == M_appcol_q);
     for (count = 1'h0; count < 7'h40; count = count + 1) begin
-      M_atop_d[(count)*1+0-:1] = (row == M_arow_q[(count)*7+6-:7]) & (col == M_acol_q[(count)*7+6-:7]);
-      M_abot_d[(count)*1+0-:1] = (row + 5'h10 == M_arow_q[(count)*7+6-:7]) & (col == M_acol_q[(count)*7+6-:7]);
-      M_btop_d[(count)*1+0-:1] = (row == M_brow_q[(count)*7+6-:7]) & (col == M_bcol_q[(count)*7+6-:7]);
-      M_bbot_d[(count)*1+0-:1] = (row + 5'h10 == M_brow_q[(count)*7+6-:7]) & (col == M_bcol_q[(count)*7+6-:7]);
+      M_atop_d[(count)*1+0-:1] = (row == M_arow_q[(count)*5+4-:5]) & (col == M_acol_q[(count)*6+5-:6]);
+      M_abot_d[(count)*1+0-:1] = (row + 5'h10 == M_arow_q[(count)*5+4-:5]) & (col == M_acol_q[(count)*6+5-:6]);
+      M_btop_d[(count)*1+0-:1] = (row == M_brow_q[(count)*5+4-:5]) & (col == M_bcol_q[(count)*6+5-:6]);
+      M_bbot_d[(count)*1+0-:1] = (row + 5'h10 == M_brow_q[(count)*5+4-:5]) & (col == M_bcol_q[(count)*6+5-:6]);
     end
-    if (col == 7'h41) begin
+    
+    case (M_counter_q)
+      11'h7d0: begin
+        M_alu_a = M_ascore_q;
+        M_alu_b = M_aapplescore_q;
+        M_alu_c = 6'h00;
+        M_ascore_d = M_alu_out[0+7-:8];
+        M_aapplescore_d = 1'h0;
+      end
+      11'h7d1: begin
+        M_alu_a = M_ascore_q;
+        M_alu_b = M_aaddscore_q;
+        M_alu_c = 6'h00;
+        M_ascore_d = M_alu_out[0+7-:8];
+        M_aaddscore_d = 1'h0;
+      end
+      11'h7d2: begin
+        M_alu_a = M_ascore_q;
+        M_alu_b = M_asubscore_q;
+        M_alu_c = 6'h01;
+        M_ascore_d = M_alu_out[0+7-:8];
+        M_asubscore_d = 1'h0;
+      end
+      11'h7d3: begin
+        M_alu_a = M_ascore_q;
+        M_alu_b = 8'h00;
+        M_alu_c = 6'h35;
+        M_cmp_d = M_alu_out[0+0-:1];
+      end
+      11'h7d4: begin
+        if (M_cmp_q == 1'h1) begin
+          M_ascore_d = 1'h0;
+        end
+      end
+      11'h7d5: begin
+        M_cmp_d = 1'h0;
+      end
+      11'h7d6: begin
+        M_alu_a = M_bscore_q;
+        M_alu_b = M_bapplescore_q;
+        M_alu_c = 6'h00;
+        M_bscore_d = M_alu_out[0+7-:8];
+        M_bapplescore_d = 1'h0;
+      end
+      11'h7d7: begin
+        M_alu_a = M_bscore_q;
+        M_alu_b = M_baddscore_q;
+        M_alu_c = 6'h00;
+        M_bscore_d = M_alu_out[0+7-:8];
+        M_baddscore_d = 1'h0;
+      end
+      11'h7d8: begin
+        M_alu_a = M_bscore_q;
+        M_alu_b = M_bsubscore_q;
+        M_alu_c = 6'h01;
+        M_bscore_d = M_alu_out[0+7-:8];
+        M_bsubscore_d = 1'h0;
+      end
+      11'h7d9: begin
+        M_alu_a = M_bscore_q;
+        M_alu_b = 8'h00;
+        M_alu_c = 6'h35;
+        M_cmp_d = M_alu_out[0+0-:1];
+      end
+      11'h7da: begin
+        if (M_cmp_q == 1'h1) begin
+          M_bscore_d = 1'h0;
+        end
+      end
+      11'h7db: begin
+        M_cmp_d = 1'h0;
+      end
+    endcase
+    aonetop = M_drawer_aonetop;
+    aonebot = M_drawer_aonebot;
+    atentop = M_drawer_atentop;
+    atenbot = M_drawer_atenbot;
+    bonetop = M_drawer_bonetop;
+    bonebot = M_drawer_bonebot;
+    btentop = M_drawer_btentop;
+    btenbot = M_drawer_btenbot;
+    if (col == 7'h40) begin
       latch = 1'h1;
     end else begin
       latch = 1'h0;
@@ -538,7 +746,7 @@ module process_1 (
     end else begin
       blank = 1'h1;
     end
-    if (col < 7'h41) begin
+    if (col < 7'h40) begin
       if (row == 1'h0) begin
         rowsel = 4'hf;
       end else begin
@@ -548,13 +756,30 @@ module process_1 (
       rowsel = row[0+3-:4];
     end
     dclk = ~M_gclk_q[3+0-:1];
-    r0 = M_walltop_q || ((|M_appletop_q));
-    g0 = M_walltop_q || ((|M_btop_q));
-    bl0 = M_walltop_q || ((|M_atop_q));
-    r1 = M_wallbot_q || ((|M_applebot_q));
-    g1 = M_wallbot_q || ((|M_bbot_q));
-    bl1 = M_wallbot_q || ((|M_abot_q));
+    if (start) begin
+      M_appletop_d = 1'h0;
+      M_applebot_d = 1'h0;
+    end
+    r0 = M_walltop_q | ((|M_appletop_q));
+    g0 = M_walltop_q | ((|M_btop_q)) | bonetop | btentop;
+    bl0 = M_walltop_q | ((|M_atop_q)) | aonetop | atentop;
+    r1 = M_wallbot_q | ((|M_applebot_q));
+    g1 = M_wallbot_q | ((|M_bbot_q)) | bonebot | btenbot;
+    bl1 = M_wallbot_q | ((|M_abot_q)) | aonebot | atenbot;
+    if ((row == 1'h0) && (col == 1'h1)) begin
+      r0 = 1'h0;
+      g0 = 1'h0;
+      bl0 = 1'h0;
+      r1 = 1'h0;
+      g1 = 1'h0;
+      bl1 = 1'h0;
+    end
   end
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_bcol_q <= M_bcol_d;
+  end
+  
   
   always @(posedge clk) begin
     if (rst == 1'b1) begin
@@ -567,60 +792,18 @@ module process_1 (
   
   always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_blethal_q <= 1'h0;
+      M_rbot_q <= 1'h0;
     end else begin
-      M_blethal_q <= M_blethal_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_brow_q <= M_brow_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_move_q <= M_move_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_aapplescore_q <= 1'h0;
-    end else begin
-      M_aapplescore_q <= M_aapplescore_d;
+      M_rbot_q <= M_rbot_d;
     end
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_lastbDirection_q <= 2'h0;
+      M_baddscore_q <= 8'h00;
     end else begin
-      M_lastbDirection_q <= M_lastbDirection_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_bcol_q <= M_bcol_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_bapplescore_q <= 1'h0;
-    end else begin
-      M_bapplescore_q <= M_bapplescore_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_btop_q <= 1'h0;
-    end else begin
-      M_btop_q <= M_btop_d;
+      M_baddscore_q <= M_baddscore_d;
     end
   end
   
@@ -635,125 +818,29 @@ module process_1 (
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_bscore_q <= 1'h0;
-    end else begin
-      M_bscore_q <= M_bscore_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_alen_q <= M_alen_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_appletop_q <= 1'h0;
-    end else begin
-      M_appletop_q <= M_appletop_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_acol_q <= M_acol_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_appcol_q <= M_appcol_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_wallbot_q <= 1'h0;
-    end else begin
-      M_wallbot_q <= M_wallbot_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_asubscore_q <= 1'h0;
-    end else begin
-      M_asubscore_q <= M_asubscore_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_aaddscore_q <= 1'h0;
-    end else begin
-      M_aaddscore_q <= M_aaddscore_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_walltop_q <= 1'h0;
-    end else begin
-      M_walltop_q <= M_walltop_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_bsubscore_q <= 1'h0;
-    end else begin
-      M_bsubscore_q <= M_bsubscore_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    M_arow_q <= M_arow_d;
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_lastaDirection_q <= 2'h2;
-    end else begin
-      M_lastaDirection_q <= M_lastaDirection_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
     M_blen_q <= M_blen_d;
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
+    M_approw_q <= M_approw_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_baddscore_q <= 1'h0;
+      M_applebot_q <= 1'h0;
     end else begin
-      M_baddscore_q <= M_baddscore_d;
+      M_applebot_q <= M_applebot_d;
     end
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_alethal_q <= 1'h0;
+      M_randcol_q <= 1'h0;
     end else begin
-      M_alethal_q <= M_alethal_d;
-    end
-  end
-  
-  
-  always @(posedge M_gclk_q[3+0-:1]) begin
-    if (rst == 1'b1) begin
-      M_abot_q <= 1'h0;
-    end else begin
-      M_abot_q <= M_abot_d;
+      M_randcol_q <= M_randcol_d;
     end
   end
   
@@ -769,29 +856,97 @@ module process_1 (
   
   always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_ascore_q <= 1'h0;
+      M_asubscore_q <= 8'h00;
     end else begin
-      M_ascore_q <= M_ascore_d;
+      M_asubscore_q <= M_asubscore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_arow_q <= M_arow_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (start == 1'b1) begin
+      M_growclk_q <= 1'h0;
+    end else begin
+      M_growclk_q <= M_growclk_d;
     end
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
-      M_applebot_q <= 1'h0;
+      M_lastbDirection_q <= 2'h0;
     end else begin
-      M_applebot_q <= M_applebot_d;
+      M_lastbDirection_q <= M_lastbDirection_d;
     end
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
-    M_counter_q <= M_counter_d;
+    if (rst == 1'b1) begin
+      M_lastaDirection_q <= 2'h2;
+    end else begin
+      M_lastaDirection_q <= M_lastaDirection_d;
+    end
   end
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
-    M_approw_q <= M_approw_d;
+    if (rst == 1'b1) begin
+      M_rtop_q <= 1'h0;
+    end else begin
+      M_rtop_q <= M_rtop_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_aapplescore_q <= 8'h00;
+    end else begin
+      M_aapplescore_q <= M_aapplescore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_aaddscore_q <= 8'h00;
+    end else begin
+      M_aaddscore_q <= M_aaddscore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_move_q <= M_move_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_brow_q <= M_brow_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_appletop_q <= 1'h0;
+    end else begin
+      M_appletop_q <= M_appletop_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_wallbot_q <= 1'h0;
+    end else begin
+      M_wallbot_q <= M_wallbot_d;
+    end
   end
   
   
@@ -805,11 +960,135 @@ module process_1 (
   
   
   always @(posedge M_gclk_q[3+0-:1]) begin
+    M_alen_q <= M_alen_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_bapplescore_q <= 8'h00;
+    end else begin
+      M_bapplescore_q <= M_bapplescore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_acol_q <= M_acol_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_walltop_q <= 1'h0;
+    end else begin
+      M_walltop_q <= M_walltop_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_randrow_q <= 1'h0;
+    end else begin
+      M_randrow_q <= M_randrow_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_bsubscore_q <= 8'h00;
+    end else begin
+      M_bsubscore_q <= M_bsubscore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_cmp_q <= M_cmp_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
     if (rst == 1'b1) begin
       M_bbot_q <= 1'h0;
     end else begin
       M_bbot_q <= M_bbot_d;
     end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_bscore_q <= 8'h00;
+    end else begin
+      M_bscore_q <= M_bscore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_counter_q <= M_counter_d;
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_btop_q <= 1'h0;
+    end else begin
+      M_btop_q <= M_btop_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[15+0-:1]) begin
+    if (start == 1'b1) begin
+      M_sclk_q <= 19'h61a80;
+    end else begin
+      M_sclk_q <= M_sclk_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_alethal_q <= 1'h1;
+    end else begin
+      M_alethal_q <= M_alethal_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_blethal_q <= 1'h1;
+    end else begin
+      M_blethal_q <= M_blethal_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_ascore_q <= 8'h00;
+    end else begin
+      M_ascore_q <= M_ascore_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    if (rst == 1'b1) begin
+      M_abot_q <= 1'h0;
+    end else begin
+      M_abot_q <= M_abot_d;
+    end
+  end
+  
+  
+  always @(posedge M_gclk_q[3+0-:1]) begin
+    M_appcol_q <= M_appcol_d;
   end
   
 endmodule

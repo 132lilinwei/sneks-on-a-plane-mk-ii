@@ -2,15 +2,15 @@ module mojo_top (
     input clk,              // 50MHz clock
     input rst_n,            // reset button (active low)
     output led [8],         // 8 user controllable LEDs
-    input cclk,             // configuration clock, AVR ready when high
+    //input cclk,             // configuration clock, AVR ready when high
     output spi_miso,        // AVR SPI MISO
-    input spi_ss,           // AVR SPI Slave Select
-    input spi_mosi,         // AVR SPI MOSI
-    input spi_sck,          // AVR SPI Clock
+    //input spi_ss,           // AVR SPI Slave Select
+    //input spi_mosi,         // AVR SPI MOSI
+    //input spi_sck,          // AVR SPI Clock
     output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
-    input avr_tx,           // AVR TX (FPGA RX)
+    //input avr_tx,           // AVR TX (FPGA RX)
     output avr_rx,          // AVR RX (FPGA TX)
-    input avr_rx_busy,      // AVR RX buffer full
+    //input avr_rx_busy,      // AVR RX buffer full
     input joystickaUp,
     input joystickaDown,
     input joystickaLeft,
@@ -79,7 +79,5 @@ module mojo_top (
     rowsel3 = process.rowsel[3];
     dispclk = process.dclk;
     
-    led[7] = start;
-    led[6:0] = process.debug;
   }
 }

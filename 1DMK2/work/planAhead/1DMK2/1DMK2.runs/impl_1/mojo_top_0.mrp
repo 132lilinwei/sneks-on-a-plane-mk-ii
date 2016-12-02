@@ -8,40 +8,40 @@ Target Device  : xc6slx9
 Target Package : tqg144
 Target Speed   : -2
 Mapper Version : spartan6 -- $Revision: 1.55 $
-Mapped Date    : Fri Dec 02 23:51:21 2016
+Mapped Date    : Sat Dec 03 02:40:36 2016
 
 Design Summary
 --------------
 Number of errors:      0
 Number of warnings:    6
 Slice Logic Utilization:
-  Number of Slice Registers:                 1,653 out of  11,440   14%
-    Number used as Flip Flops:               1,653
+  Number of Slice Registers:                 1,925 out of  11,440   16%
+    Number used as Flip Flops:               1,925
     Number used as Latches:                      0
     Number used as Latch-thrus:                  0
     Number used as AND/OR logics:                0
-  Number of Slice LUTs:                      2,184 out of   5,720   38%
-    Number used as logic:                    2,177 out of   5,720   38%
-      Number using O6 output only:           1,507
-      Number using O5 output only:              35
-      Number using O5 and O6:                  635
+  Number of Slice LUTs:                      3,300 out of   5,720   57%
+    Number used as logic:                    3,294 out of   5,720   57%
+      Number using O6 output only:           3,089
+      Number using O5 output only:              46
+      Number using O5 and O6:                  159
       Number used as ROM:                        0
     Number used as Memory:                       0 out of   1,440    0%
-    Number used exclusively as route-thrus:      7
-      Number with same-slice register load:      0
-      Number with same-slice carry load:         7
+    Number used exclusively as route-thrus:      6
+      Number with same-slice register load:      2
+      Number with same-slice carry load:         4
       Number with other load:                    0
 
 Slice Logic Distribution:
-  Number of occupied Slices:                   740 out of   1,430   51%
-  Number of MUXCYs used:                       260 out of   2,860    9%
-  Number of LUT Flip Flop pairs used:        2,188
-    Number with an unused Flip Flop:         1,040 out of   2,188   47%
-    Number with an unused LUT:                   4 out of   2,188    1%
-    Number of fully used LUT-FF pairs:       1,144 out of   2,188   52%
-    Number of unique control sets:              15
+  Number of occupied Slices:                 1,099 out of   1,430   76%
+  Number of MUXCYs used:                       216 out of   2,860    7%
+  Number of LUT Flip Flop pairs used:        3,319
+    Number with an unused Flip Flop:         1,427 out of   3,319   42%
+    Number with an unused LUT:                  19 out of   3,319    1%
+    Number of fully used LUT-FF pairs:       1,873 out of   3,319   56%
+    Number of unique control sets:              24
     Number of slice register sites lost
-      to control set restrictions:              59 out of  11,440    1%
+      to control set restrictions:              67 out of  11,440    1%
 
   A LUT Flip Flop pair for this architecture represents one LUT paired with
   one Flip Flop within a slice.  A control set is a unique combination of
@@ -50,8 +50,8 @@ Slice Logic Distribution:
   over-mapped for a non-slice resource or if Placement fails.
 
 IO Utilization:
-  Number of bonded IOBs:                        34 out of     102   33%
-    Number of LOCed IOBs:                       34 out of      34  100%
+  Number of bonded IOBs:                        32 out of     102   31%
+    Number of LOCed IOBs:                       32 out of      32  100%
 
 Specific Feature Utilization:
   Number of RAMB16BWERs:                         0 out of      32    0%
@@ -78,11 +78,11 @@ Specific Feature Utilization:
   Number of STARTUPs:                            0 out of       1    0%
   Number of SUSPEND_SYNCs:                       0 out of       1    0%
 
-Average Fanout of Non-Clock Nets:                4.49
+Average Fanout of Non-Clock Nets:                5.27
 
-Peak Memory Usage:  466 MB
-Total REAL time to MAP completion:  9 secs 
-Total CPU time to MAP completion (all processors):   9 secs 
+Peak Memory Usage:  469 MB
+Total REAL time to MAP completion:  16 secs 
+Total CPU time to MAP completion (all processors):   16 secs 
 
 Table of Contents
 -----------------
@@ -123,15 +123,6 @@ Section 3 - Informational
 INFO:Map:284 - Map is running with the multi-threading option on. Map currently
    supports the use of up to 2 processors. Based on the the user options and
    machine load, Map will use 2 processors during this run.
-INFO:LIT:243 - Logical network joystickbDown has no load.
-INFO:LIT:395 - The above info message is repeated 9 more times for the following
-   (max. 5 shown):
-   joystickbLeft,
-   joystickbRight,
-   joystickbUp,
-   avr_rx_busy_IBUF,
-   spi_mosi_IBUF
-   To see the details of these info messages, please use the -detail switch.
 INFO:MapLib:562 - No environment variables are currently set.
 INFO:LIT:244 - All of the single ended outputs in this design are using slew
    rate limited output drivers. The delay on speed critical single ended outputs
@@ -146,9 +137,9 @@ INFO:Pack:1650 - Map created a placed design.
 
 Section 4 - Removed Logic Summary
 ---------------------------------
-  14 block(s) removed
-   6 block(s) optimized away
-   8 signal(s) removed
+  13 block(s) removed
+   7 block(s) optimized away
+   7 signal(s) removed
 
 Section 5 - Removed Logic
 -------------------------
@@ -160,9 +151,7 @@ The trimmed logic reported below is either:
 
 The signal "spi_miso" is unused and has been removed.
  Unused block "spi_miso_OBUFT" (TRI) removed.
-  The signal "M_abot_q[60]" is unused and has been removed.
-   Unused block "XST_GND" (ZERO) removed.
-  The signal "fsmfake1_FSM_FFd4" is unused and has been removed.
+  The signal "led<0>_inv" is unused and has been removed.
    Unused block "XST_VCC" (ONE) removed.
 The signal "spi_channel[3]" is unused and has been removed.
  Unused block "spi_channel_3_OBUFT" (TRI) removed.
@@ -183,12 +172,12 @@ Unused block "spi_miso" (PAD) removed.
 
 Optimized Block(s):
 TYPE 		BLOCK
+GND 		XST_GND
 GND 		process/XST_GND
 VCC 		process/XST_VCC
-LUT1 		process/random/Maddsub_PWR_4_o_BUS_0041_MuLt_90_OUT_Madd2_cy<3>_rt
-   optimized to 0
-GND 		process/random/XST_GND
-VCC 		process/random/XST_VCC
+GND 		process/drawer/XST_GND
+GND 		process/drawer/ascore[7]_PWR_13_o_div_0/XST_GND
+GND 		process/drawer/bscore[7]_PWR_13_o_div_6/XST_GND
 GND 		reset_cond/XST_GND
 
 To enable printing of redundant blocks removed and signals merged, set the
@@ -201,12 +190,9 @@ Section 6 - IOB Properties
 | IOB Name                           | Type             | Direction | IO Standard          | Diff  | Drive    | Slew | Reg (s)      | Resistor | IOB      |
 |                                    |                  |           |                      | Term  | Strength | Rate |              |          | Delay    |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| avr_rx_busy                        | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
-| avr_tx                             | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
 | bl0                                | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | bl1                                | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | blank                              | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
-| cclk                               | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
 | clk                                | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
 | dispclk                            | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | g0                                 | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
@@ -215,6 +201,10 @@ Section 6 - IOB Properties
 | joystickaLeft                      | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
 | joystickaRight                     | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
 | joystickaUp                        | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
+| joystickbDown                      | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
+| joystickbLeft                      | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
+| joystickbRight                     | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
+| joystickbUp                        | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
 | latch                              | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | led[0]                             | IOB              | OUTPUT    | LVTTL                |       | 12       | SLOW |              |          |          |
 | led[1]                             | IOB              | OUTPUT    | LVTTL                |       | 12       | SLOW |              |          |          |
@@ -231,9 +221,6 @@ Section 6 - IOB Properties
 | rowsel2                            | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | rowsel3                            | IOB              | OUTPUT    | LVCMOS33             |       | 12       | SLOW |              |          |          |
 | rst_n                              | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
-| spi_mosi                           | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
-| spi_sck                            | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
-| spi_ss                             | IOB              | INPUT     | LVTTL                |       |          |      |              |          |          |
 | start                              | IOB              | INPUT     | LVTTL                |       |          |      |              | PULLUP   |          |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------+
 

@@ -1,0 +1,62 @@
+module drawer ( //GIVEN ROW, COL AND SCORE, RETURN WHETHER CURRENT CELL HAS SCORE ELEMENT
+    input row[5],
+    input col[7],
+    input ascore[8],
+    input bscore[8],
+    output aonetop,
+    output aonebot,
+    output atentop,
+    output atenbot,
+    output bonetop,
+    output bonebot,
+    output btentop,
+    output btenbot
+  ) {
+
+  sig num[10][5][4];
+  var aone, aten, bone, bten;
+  var numRow;
+  sig atens[32][64];
+  sig aones[32][64];
+  sig btens[32][64];
+  sig bones[32][64];
+  sig zeros[32][64];
+  
+  always {
+    zeros = {64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0};
+    
+    num[0] = {b1111, b1001, b1001, b1001, b1111};
+    num[1] = {b1111, b0100, b0100, b0110, b0100};
+    num[2] = {b1111, b0001, b1111, b1000, b1111};
+    num[3] = {b1111, b1000, b1111, b1000, b1111};
+    num[4] = {b1000, b1000, b1111, b1001, b1001};
+    num[5] = {b1111, b1000, b1111, b0001, b1111};
+    num[6] = {b1111, b1001, b1111, b0001, b1111};
+    num[7] = {b1000, b1000, b1000, b1000, b1111};
+    num[8] = {b1111, b1001, b1111, b1001, b1111};
+    num[9] = {b1111, b1000, b1111, b1001, b1111};
+    
+    
+    aone = (ascore - (ascore / 10 * 10)) & b1111;
+    aten = (ascore/10) & b1111;
+    bone = (bscore - (bscore / 10 * 10)) & b1111;
+    bten = (bscore/10) & b1111;
+    
+    for (numRow = 13; numRow < 18; numRow++){
+      aones[numRow] = 0 + num[aone][numRow-13] << 10;
+      atens[numRow] = 0 + num[aten][numRow-13] << 5;
+      bones[numRow] = 0 + num[bone][numRow-13] << 57;
+      btens[numRow] = 0 + num[bten][numRow-13] << 52;
+    }
+    
+    aonetop = aones[row][col];
+    atentop = atens[row][col];
+    bonetop = bones[row][col];
+    btentop = btens[row][col];
+    aonebot = aones[row + 16][col];
+    atenbot = atens[row + 16][col];
+    bonebot = bones[row + 16][col];
+    btenbot = btens[row + 16][col];
+    
+  }
+}

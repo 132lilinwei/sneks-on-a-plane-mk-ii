@@ -1,0 +1,30 @@
+module boolean (
+    input a[8], //8-bit input
+    input b[8],
+    input c[4], //4-bit input for boolean selection
+    output out[8] //8-bit output
+  ) {
+
+  always {
+  
+    case(c[3:0]){
+      4b0000: out = 0; //0
+      4b1000: out = a & b;//and
+      4b0100: out = (~a) & b; //not a and b
+      4b1100: out = b; //b
+      4b0010: out = a & (~b); //a and notb
+      4b1010: out = a; //a
+      4b0110: out = a ^ b;//xor
+      4b1110: out = a | b;//or  
+      4b0001: out = ~(a|b); //nor
+      4b1001: out = ~(a^b); //xnor
+      4b0101: out = ~a; //invert a
+      4b1101: out = (~a)|b; // nota or b
+      4b0011: out = ~b; //invert b
+      4b1011: out = a|(~b); // a or not b
+      4b0111: out = ~(a&b); //nand
+      4b1111: out = 8b11111111; //1
+      default: out=0;      
+    }
+  }
+}

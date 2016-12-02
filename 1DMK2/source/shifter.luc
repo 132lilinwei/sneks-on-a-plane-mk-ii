@@ -1,0 +1,21 @@
+module shifter (
+    input a[8], //8-bit input
+    input b[8],
+    input c[2], //opcode [2:0]
+    output out [8] //truncating output
+  ) {
+  
+  always {
+    
+  
+    // Website documentation is wrong. This is the correct shift signs below
+    case (c[1:0]){
+      0: out = a << b; // Shift Left
+      1: out = a >> b; // Shift Right
+      2: out = $signed(a) <<< b; //unused
+      3: out = $signed(a) >>> b; // Shift Right with sign extension
+
+      default: out = 0; // defaulting to 0
+    }
+  }
+}

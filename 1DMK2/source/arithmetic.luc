@@ -1,0 +1,31 @@
+module arithmetic (
+    input a[8], //8-bit input
+    input b[8],
+    input c[2], //opcode [1:0]
+    output out[11] //8+3bits for zvn, occupy additional bits.
+  ) {
+  
+  adder adder;
+  mult mult;
+  
+  always{  
+  
+  adder.a = a;
+  adder.b = b;
+  adder.c = c[0];
+  
+  mult.a = a;
+  mult.b = b;
+
+    if (c[1]) {
+      out[7:0] = mult.out;
+    }
+    else{
+      out[7:0] = adder.out[7:0];
+    }
+    
+    out[10:8] = adder.out[10:8];
+  
+  }
+}
+

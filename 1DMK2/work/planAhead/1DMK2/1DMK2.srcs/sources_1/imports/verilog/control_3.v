@@ -7,13 +7,13 @@
 module control_3 (
     input clk,
     input rst,
-    output reg [6:0] rowOut,
+    output reg [3:0] rowOut,
     output reg [6:0] colOut
   );
   
   
   
-  reg [6:0] M_row_d, M_row_q = 1'h0;
+  reg [3:0] M_row_d, M_row_q = 1'h0;
   
   reg [6:0] M_col_d, M_col_q = 1'h0;
   
@@ -25,11 +25,7 @@ module control_3 (
     M_col_d = M_col_q;
     if (M_col_q >= 7'h50) begin
       M_col_d = 1'h0;
-      if (M_row_q == 4'hf) begin
-        M_row_d = 1'h0;
-      end else begin
-        M_row_d = M_row_q + 1'h1;
-      end
+      M_row_d = M_row_q + 1'h1;
     end else begin
       M_col_d = M_col_q + 1'h1;
     end
@@ -39,18 +35,18 @@ module control_3 (
   
   always @(posedge clk) begin
     if (rst == 1'b1) begin
-      M_row_q <= 1'h0;
+      M_col_q <= 1'h0;
     end else begin
-      M_row_q <= M_row_d;
+      M_col_q <= M_col_d;
     end
   end
   
   
   always @(posedge clk) begin
     if (rst == 1'b1) begin
-      M_col_q <= 1'h0;
+      M_row_q <= 1'h0;
     end else begin
-      M_col_q <= M_col_d;
+      M_row_q <= M_row_d;
     end
   end
   

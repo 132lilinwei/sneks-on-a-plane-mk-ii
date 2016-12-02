@@ -1,0 +1,41 @@
+module alu (
+    input a[8], //8-bit input
+    input b[8],
+    input c[6], //entirety of opcode
+    output out[11] //8+3bits for zvn, occupy additional bits.
+  ) {
+  
+  arithmetic arithmetic;
+  boolean boolean;
+  shifter shifter;
+  comp comp;
+
+  always {
+    arithmetic.a=a;  //adder
+    arithmetic.b=b;
+    arithmetic.c=c[1:0];
+    
+    boolean.a=a;  //boolean
+    boolean.b=b;
+    boolean.c=c[3:0];
+    
+    shifter.a=a;  //shifter
+    shifter.b=b;
+    shifter.c=c[1:0];
+    
+    comp.z=arithmetic.out[10];  //comp
+    comp.v=arithmetic.out[9];
+    comp.n=arithmetic.out[8];
+    comp.c=c[2:1];
+        
+    case (c[5:4]){
+      2b00: out[7:0] = arithmetic.out[7:0];
+      2b01: out[7:0] = boolean.out[7:0];
+      2b10: out[7:0] = shifter.out[7:0];
+      2b11: out[7:0] = comp.out[7:0];
+//      default: ; //defaults by default to 0
+    } 
+    
+    out[10:8] = arithmetic.out[10:8];
+  }
+}

@@ -15,4 +15,8 @@ NET "joystickaLeft" LOC = P2 | IOSTANDARD = LVTTL | PULLUP;
 NET "joystickaUp" LOC = P6 | IOSTANDARD = LVTTL | PULLUP;
 NET "joystickaRight" LOC = P8 | IOSTANDARD = LVTTL | PULLUP;
 NET "joystickaDown" LOC = P10 | IOSTANDARD = LVTTL | PULLUP;
+NET "joystickbLeft" LOC = P1 | IOSTANDARD = LVTTL | PULLUP;
+NET "joystickbUp" LOC = P5 | IOSTANDARD = LVTTL | PULLUP;
+NET "joystickbRight" LOC = P7 | IOSTANDARD = LVTTL | PULLUP;
+NET "joystickbDown" LOC = P9 | IOSTANDARD = LVTTL | PULLUP;
 NET "start" LOC = P57 | IOSTANDARD = LVTTL | PULLUP;
