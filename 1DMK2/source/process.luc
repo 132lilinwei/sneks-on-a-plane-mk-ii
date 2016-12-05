@@ -25,7 +25,7 @@ module process (
   const SPEED = 3; //HOW FAST TO RUN EACH ONE
   dff gclk[16](.clk(clk), .rst(rst), #INIT(0)); //GAME CLOCK
   dff growclk[32](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //GROW CLOCK
-  dff sclk[19](.clk(gclk.q[15]), .rst(start), #INIT(400000)); //SPEED CLOCK
+  dff sclk[8](.clk(gclk.q[15]), .rst(start), #INIT(400000)); //SPEED CLOCK
   dff cclk[22](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //COUNTDOWN CLOCK
   dff countdown[2](.clk(gclk.q[SPEED]), .rst(start), #INIT(3)); //COUNTDOWN NUMBER
   
@@ -121,7 +121,7 @@ module process (
     gclk.d = gclk.q + 1;
     growclk.d = growclk.q + 1;
     counter.d = counter.q + 1;
-    if(sclk.q > 1000) sclk.d = sclk.q - 1;
+    if(sclk.q > 5) sclk.d = sclk.q - 1;
     else sclk.d = sclk.q;
     
     if(growclk.q[31]){
@@ -134,7 +134,7 @@ module process (
     COUNTDOWN CONTROLLER
     */
     cclk.d = cclk.q + 1;
-    if (cclk.q == 1400000){
+    if (cclk.q == 1000000){
       cclk.d = 0;
       countdown.d = countdown.q - 1;
     }
