@@ -47,3 +47,6 @@ Temporary Items
 .apdisk
 1DMK2/work/planAhead/1DMK2/1DMK2.data/cache/mojo_top_0_ngc_zx.edif
 *.v
+*.ngm
+1DMK2/work/planAhead/1DMK2/1DMK2.runs/impl_1/mojo_top_0.ncd
+*.v

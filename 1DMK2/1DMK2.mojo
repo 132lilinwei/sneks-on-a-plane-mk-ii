@@ -5,16 +5,17 @@
     <src>alu.luc</src>
     <src>pn_gen.luc</src>
     <src>drawer.luc</src>
+    <src>mult.luc</src>
+    <src>control.luc</src>
+    <src top="true">mojo_top.luc</src>
     <src>comp.luc</src>
     <src>process.luc</src>
     <src>shifter.luc</src>
-    <src>mult.luc</src>
     <src>arithmetic.luc</src>
-    <src>control.luc</src>
+    <src>countdowndisp.luc</src>
     <src>adder.luc</src>
-    <src top="true">mojo_top.luc</src>
-    <ucf>custom.ucf</ucf>
     <ucf lib="true">mojo.ucf</ucf>
+    <ucf>custom.ucf</ucf>
     <component>reset_conditioner.luc</component>
   </files>
 </project>
