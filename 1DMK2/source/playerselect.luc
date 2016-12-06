@@ -1,0 +1,63 @@
+module playerselect (
+    input playera,
+    input playerb,
+    input row[5],
+    input col[7],
+    output lineouttop,
+    output lineoutbot,
+    output aout,
+    output bout,
+    output readyout
+  ) {
+  
+  sig player1[5][28];
+  sig player2[5][28];
+  sig ready[5][21];
+  sig line[32][64];
+  sig aready[32][64];
+  sig bready[32][64];
+  sig a[32][64];
+  sig b[32][64];
+  sig zeros[32][64];
+  var numRow;
+
+  always {
+    zeros = {64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0};
+    lineouttop = 0;
+    lineoutbot = 0;
+    aout = 0;
+    bout = 0;
+    readyout = 0;
+    
+    player1 = {$reverse(28b1110100011101010111011100010), $reverse(28b1010100010101010100010100110), $reverse(28b1110100011101110111011000010), $reverse(28b1000100010100100100010100010), $reverse(28b1000111010100100111010100111)};
+    player2 ={$reverse(28b1110100011101010111011100111), $reverse(28b1010100010101010100010100001), $reverse(28b1110100011101110111011000111), $reverse(28b1000100010100100100010100100), $reverse(28b1000111010100100111010100111)};
+    ready = {$reverse(21b110011101110110010101), $reverse(21b101010001010101010101), $reverse(21b110011101110101011101), $reverse(21b101010001010101001000), $reverse(21b101011101010110001001)};
+    
+    line = zeros;
+    a = zeros;
+    b = zeros;
+    aready = zeros;
+    bready = zeros;
+    for(numRow = 0; numRow < 32; numRow++){
+      line[numRow] = 64b1100000000000000000000000000000;
+    }
+    for (numRow = 7; numRow < 12; numRow++){
+      a[numRow] = 0 + player1[11 - numRow] << 1;
+      b[numRow] = 0 + player2[11 - numRow] << 33;
+    }
+    for (numRow = 18; numRow < 23; numRow++){
+      if(playera) aready[numRow] = 0 + ready[22 - numRow] << 4;
+      if(playerb) bready[numRow] = 0 + ready[22 - numRow] << 37;
+    }
+    
+    
+    
+      
+    lineouttop = line[row][col];
+    lineoutbot = line[row + 16][col];
+    aout = a[row][col];
+    bout = b[row][col];
+    readyout = aready[row + 16][col] | bready[row+16][col];
+    
+  }
+}

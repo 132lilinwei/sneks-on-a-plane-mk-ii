@@ -10,6 +10,8 @@ module process (
     input joystickbDown,
     input joystickbLeft,
     input joystickbRight,
+    input playerone,
+    input playertwo,
     output r0,
     output g0,
     output bl0,
@@ -69,8 +71,8 @@ module process (
   dff rbot(.clk(gclk.q[SPEED]), .rst(rst));
   
   //DIRECTIONS
-  dff adirection[4](.clk(clk), .rst(rst), #INIT(b0100)); //0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN so {0011} is up and left diagonally
-  dff bdirection[4](.clk(clk), .rst(rst), #INIT(b0001)); //0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
+  dff adirection[4](.clk(clk), .rst(rst), #INIT(b0100)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN so {0011} is up and left diagonally
+  dff bdirection[4](.clk(clk), .rst(rst), #INIT(b0001)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
   
   dff lastaDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b10)); // 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
   dff lastbDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b00));
@@ -86,6 +88,8 @@ module process (
   dff bsubscore[8](.clk(gclk.q[SPEED]), .rst(rst), #INIT(8b0));
   
   //VAR 
+  dff playera(.clk(gclk.q[SPEED]), .rst(rst), #INIT(0));
+  dff playerb(.clk(gclk.q[SPEED]), .rst(rst), #INIT(0));
   dff counter[20](.clk(gclk.q[SPEED]));
   var count;
   dff move(.clk(gclk.q[SPEED]));
@@ -96,6 +100,8 @@ module process (
   dff randrow[5](.clk(gclk.q[SPEED]), .rst(rst));
   dff randcol[6](.clk(gclk.q[SPEED]), .rst(rst));
   dff cmp[1](.clk(gclk.q[SPEED]));
+  
+  //SCORE SIGNALS
   sig aonetop;
   sig aonebot;
   sig atentop;
@@ -104,11 +110,24 @@ module process (
   sig bonebot;
   sig btentop;
   sig btenbot;
+  
+  //COUNTDOWN SIGNALS
   sig cdtop;
   sig cdbot;
   
+  //PLAYER SELECT SIGNALS
+  sig player1;
+  sig player2;
+  sig playerlinetop;
+  sig playerlinebot;
+  sig ready;
+  
+  //TITLE SCREEN SIGNALS
+  sig sneks;
+  sig plane;
+  
   //STATE MACHINE
-  fsm state(.clk(gclk.q[SPEED]), #INIT(IDLE)) = {IDLE, RESETGAME, STARTGAME, COUNTDOWN, RUN, DEAD, GAMEOVER, STOP};
+  fsm state(.clk(gclk.q[SPEED]), #INIT(TITLE)) = {TITLE, PLAYERSELECT, RESETGAME, STARTGAME, COUNTDOWN, RUN, DEAD, GAMEOVER, STOP};
   
   //MODULES
   control control;
@@ -116,6 +135,8 @@ module process (
   pn_gen pn;
   drawer drawer;
   countdowndisp countdowndisp;
+  playerselect playerselect;
+  title title;
   
   always {
     gclk.d = gclk.q + 1;
@@ -184,6 +205,14 @@ module process (
     countdowndisp.col = col;
     countdowndisp.number = countdown.q;
     
+    playerselect.row = row;
+    playerselect.col = col;
+    playerselect.playera = playera.q;
+    playerselect.playerb = playerb.q;
+    
+    title.row = row;
+    title.col = col;
+    
     adirection.d = adirection.q;
     bdirection.d = bdirection.q;
     
@@ -195,6 +224,9 @@ module process (
     
     randrow.d = randrow.q;
     randcol.d = randcol.q;
+    
+    playera.d = playera.q;
+    playerb.d = playerb.q;
     
     aaddscore.d = aaddscore.q;
     aapplescore.d = aapplescore.q;
@@ -217,6 +249,17 @@ module process (
       bdirection.d[3] = ~joystickbDown;
     }
     
+    
+    if (state.q == state.TITLE){
+      playera.d = 0;
+      playerb.d = 0;
+      if(start) state.d = state.PLAYERSELECT;
+    }    
+    if (state.q == state.PLAYERSELECT){
+      if(playerone) playera.d = 1;
+      if(playertwo) playerb.d = 1;
+      if(start && (playera.q | playerb.q)) state.d = state.RESETGAME;
+    }
     /*****
     INITIALISATION (RESET SCORE)
     ****/
@@ -224,6 +267,8 @@ module process (
       ascore.d = 0;
       bscore.d = 0;
       sclk.d = 400000; //RESET MOVEMENT SPEED
+      alen.d = 8; //RESET SNEK LENGTHS
+      blen.d = 8;
       growclk.d = 0;
       state.d = state.STARTGAME;
     }
@@ -249,8 +294,6 @@ module process (
       }
       adirection.d = b0100;
       bdirection.d = b0001;
-      alen.d = 8;
-      blen.d = 8;
       alethal.d = 0;
       blethal.d = 0;
       randrow.d = pn.num[4:0];
@@ -397,7 +440,7 @@ module process (
         if((arow.q[0] == approw.q) && (acol.q[0] == appcol.q)){
           approw.d = randrow.q;
           appcol.d = randcol.q;
-          aapplescore.d = aapplescore.q + APPLE;
+          aapplescore.d = APPLE;
           if(alen.q < 64 - GROWTH){
             alen.d = alen.q + GROWTH;
           }
@@ -406,28 +449,28 @@ module process (
         else if ((arow.q[0] == 0) || (arow.q[0] == 31) || (acol.q[0] == 16) || (acol.q[0] == 47)){
           alethal.d = 1;
           state.d = state.DEAD;
-          asubscore.d = asubscore.q + COLLIDE;
+          asubscore.d = COLLIDE;
         }
         //CHECK A COLLIDE WITH SELF
         else if ((|atop.q[63:1] & atop.q[0]) | (|abot.q[63:1] & abot.q[0])){
           alethal.d = 1;
           state.d = state.DEAD;
-          asubscore.d = asubscore.q + COLLIDE;
+          asubscore.d = COLLIDE;
         }
         //CHECK A COLLIDE WITH B
         else if ((|btop.q[63:1] & atop.q[0]) | (|bbot.q[63:1] & abot.q[0])){
           alethal.d = 1;
           state.d = state.DEAD;
-          asubscore.d = asubscore.q + COLLIDE;
-          baddscore.d = baddscore.q + KILL;
+          asubscore.d = COLLIDE;
+          baddscore.d = KILL;
         }
         
         //CHECK A HEAD COLLIDE WITH B HEAD
         if((brow.q[0] == arow.q[0]) & (acol.q[0] == bcol.q[0])){
           alethal.d = 1;
           state.d = state.DEAD;
-          asubscore.d = asubscore.q + COLLIDE;
-          bsubscore.d = bsubscore.q + COLLIDE;
+          asubscore.d = COLLIDE;
+          bsubscore.d = COLLIDE;
         }
       }
       //CHECK B COLLISIONS
@@ -436,7 +479,7 @@ module process (
         if((brow.q[0] == approw.q) && (bcol.q[0] == appcol.q)){
           approw.d = randrow.q;
           appcol.d = randcol.q;
-          bapplescore.d = bapplescore.q + APPLE;
+          bapplescore.d = APPLE;
           if(blen.q < 64 - GROWTH){
             blen.d = blen.q + GROWTH;
           }
@@ -445,28 +488,28 @@ module process (
         else if ((brow.q[0] == 0) || (brow.q[0] == 31) || (bcol.q[0] == 16) || (bcol.q[0] == 47)){
           blethal.d = 1;
           state.d = state.DEAD;
-          bsubscore.d = bsubscore.q + COLLIDE;
+          bsubscore.d = COLLIDE;
         }
         //CHECK B COLLIDE WITH SELF
         else if ((|btop.q[63:1] & btop.q[0]) | (|bbot.q[63:1] & bbot.q[0])){
           blethal.d = 1;
           state.d = state.DEAD;
-          bsubscore.d = bsubscore.q + COLLIDE;
+          bsubscore.d = COLLIDE;
         }
         //CHECK B COLLIDE WITH A
         else if ((|atop.q[63:1] & btop.q[0]) | (|abot.q[63:1] & bbot.q[0])){
           blethal.d = 1;
           state.d = state.DEAD;
-          bsubscore.d = bsubscore.q + COLLIDE;
-          aaddscore.d = aaddscore.q + KILL;
+          bsubscore.d = COLLIDE;
+          aaddscore.d = KILL;
         }
         
         //CHECK A HEAD COLLIDE WITH B HEAD
         if((brow.q[0] == arow.q[0]) & (acol.q[0] == bcol.q[0])){
           blethal.d = 1;
           state.d = state.DEAD;
-          asubscore.d = asubscore.q + COLLIDE;
-          bsubscore.d = bsubscore.q + COLLIDE;
+          asubscore.d = COLLIDE;
+          bsubscore.d = COLLIDE;
         }
       }
     
@@ -586,6 +629,34 @@ module process (
         2014:
           if(state.q == state.DEAD) state.d = state.STARTGAME;
       }
+      
+      
+      if(~playera.q){
+        arow.d[0] = 0;
+        acol.d[0] = 0;
+        alen.d = 0;
+        for(count = 1; count < 64; count++){
+          arow.d[count] = 0;
+          acol.d[count] = 0;
+        }
+        alethal.d = 0;
+        aaddscore.d = 0;
+        aapplescore.d = 0;
+        asubscore.d = 0;
+      }
+      if(~playerb.q){
+        brow.d[0] = 0;
+        bcol.d[0] = 0;
+        blen.d = 0;
+        for(count = 1; count < 64; count++){
+          brow.d[count] = 0;
+          bcol.d[count] = 0;
+        }
+        blethal.d = 0;
+        baddscore.d = 0;
+        bapplescore.d = 0;
+        bsubscore.d = 0;
+      }
     }
     if(state.q == state.GAMEOVER){
       
@@ -615,6 +686,21 @@ module process (
     cdbot = countdowndisp.cdbot;
     
     /*****
+    CHECK IF CURRENT CELL HAS PLAYER SELECT ELEMENT
+    *****/
+    player1 = playerselect.aout;
+    player2 = playerselect.bout;
+    playerlinetop = playerselect.lineouttop;
+    playerlinebot = playerselect.lineoutbot;
+    ready = playerselect.readyout;
+    
+    /*****
+    CHECK IF CURRENT CELL HAS TITLE ELEMENT
+    *****/
+    sneks = title.sneksout;
+    plane = title.planeout;
+    
+    /*****
     DISPLAY CONTROLLER
     *****/
     if(col == 64) latch = 1;
@@ -640,7 +726,15 @@ module process (
       g1 = wallbot.q | (|bbot.q) | bonebot | btenbot;
       bl1 = wallbot.q | (|abot.q) | aonebot | atenbot;
     }
-     if (state.q == state.STARTGAME){
+    if (state.q == state.PLAYERSELECT){
+      r0 = playerlinetop;
+      g0 = playerlinetop | player2;
+      bl0 = playerlinetop | player1;
+      r1 = playerlinebot | ready;
+      g1 = playerlinebot;
+      bl1 = playerlinebot;
+    }
+    if (state.q == state.STARTGAME){
       r0 = walltop.q;
       g0 = walltop.q | bonetop | btentop;
       bl0 = walltop.q | aonetop | atentop;
@@ -656,6 +750,26 @@ module process (
       g1 = wallbot.q | bonebot | btenbot;
       bl1 = wallbot.q | aonebot | atenbot;
     }
+    if (state.q == state.TITLE){
+      r0 = sneks;
+      g0 = 0;
+      bl0 = 0;
+      r1 = plane;
+      g1 = plane;
+      bl1 = plane;
+    }
+    if (~playera.q){
+      aonetop = 0;
+      atentop = 0;
+      aonebot = 0;
+      atenbot = 0;
+    }
+    if (~playerb.q){
+      bonetop = 0;
+      btentop = 0;
+      bonebot = 0;
+      btenbot = 0;
+    }
 
     if((row == 0) && (col == 1 || col == 0)){
       r0 = 0;
@@ -666,7 +780,7 @@ module process (
       bl1 = 0;
     }
     
-    if(start) state.d = state.RESETGAME;
+
   
   }
 }
