@@ -26,8 +26,8 @@ module process (
   
   const SPEED = 3; //HOW FAST TO RUN EACH ONE
   dff gclk[16](.clk(clk), .rst(rst), #INIT(0)); //GAME CLOCK
-  dff growclk[32](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //GROW CLOCK
-  dff sclk[8](.clk(gclk.q[15]), .rst(start), #INIT(400000)); //SPEED CLOCK
+  dff growclk[25](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //GROW CLOCK
+  dff sclk[20](.clk(gclk.q[12]), .rst(start), #INIT(400000)); //SPEED CLOCK
   dff cclk[22](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //COUNTDOWN CLOCK
   dff countdown[2](.clk(gclk.q[SPEED]), .rst(start), #INIT(3)); //COUNTDOWN NUMBER
   
@@ -53,6 +53,8 @@ module process (
   //SNAKE SIZES
   dff alen[6](.clk(gclk.q[SPEED]));
   dff blen[6](.clk(gclk.q[SPEED]));
+  dff agrow(.clk(gclk.q[SPEED]));
+  dff bgrow(.clk(gclk.q[SPEED]));
   
   //SNAKE DEATHS
   dff alethal[1](.clk(gclk.q[SPEED]), .rst(rst), #INIT(1));
@@ -145,12 +147,6 @@ module process (
     if(sclk.q > 5) sclk.d = sclk.q - 1;
     else sclk.d = sclk.q;
     
-    if(growclk.q[31]){
-      alen.d = alen.q + 1;
-      blen.d = blen.q + 1;
-      growclk.d = 0;
-    }
-    
     /*
     COUNTDOWN CONTROLLER
     */
@@ -170,17 +166,6 @@ module process (
     g1 = 0;
     bl1 = 0;
     
-    
-    /*
-    GAME TIME CONTROL
-    */
-    if ((counter.q >= 200000) && (counter.q > sclk.q)){
-      move.d = 1;
-      counter.d = 0;
-    }
-    else{
-      move.d = 0;
-    }
     
     control.clk = gclk.q[SPEED];
     control.rst = rst;
@@ -228,12 +213,34 @@ module process (
     playera.d = playera.q;
     playerb.d = playerb.q;
     
+    alen.d = alen.q;
+    blen.d = blen.q;
+    
     aaddscore.d = aaddscore.q;
     aapplescore.d = aapplescore.q;
     asubscore.d = asubscore.q;
     baddscore.d = baddscore.q;
     bapplescore.d = bapplescore.q;
     bsubscore.d = bsubscore.q;
+    
+    /*
+    GAME TIME CONTROL
+    */
+    if ((counter.q >= 200000) && (counter.q > sclk.q)){
+      move.d = 1;
+      counter.d = 0;
+      aaddscore.d = 0;
+      aapplescore.d = 0;
+      asubscore.d = 0;
+      baddscore.d = 0;
+      bapplescore.d = 0;
+      bsubscore.d = 0;
+      agrow.d = 0;
+      bgrow.d = 0;
+    }
+    else{
+      move.d = 0;
+    }
 
     //JOYSTICK INPUT 
     if(~joystickaLeft | ~joystickaUp | ~joystickaRight | ~joystickaDown){
@@ -251,11 +258,13 @@ module process (
     
     
     if (state.q == state.TITLE){
+      sclk.d = 400000; //RESET MOVEMENT SPEED
       playera.d = 0;
       playerb.d = 0;
       if(start) state.d = state.PLAYERSELECT;
     }    
     if (state.q == state.PLAYERSELECT){
+      sclk.d = 400000; //RESET MOVEMENT SPEED
       if(playerone) playera.d = 1;
       if(playertwo) playerb.d = 1;
       if(start && (playera.q | playerb.q)) state.d = state.RESETGAME;
@@ -435,15 +444,13 @@ module process (
       CHECK COLLISIONS
       *****/
       //CHECK A COLLISIONS
-      if (~alethal.q){
+      if (~alethal.q & playera.q){
         //CHECK A COLLIDE WITH APPLE
         if((arow.q[0] == approw.q) && (acol.q[0] == appcol.q)){
           approw.d = randrow.q;
           appcol.d = randcol.q;
           aapplescore.d = APPLE;
-          if(alen.q < 64 - GROWTH){
-            alen.d = alen.q + GROWTH;
-          }
+          if(~agrow.q) agrow.d = 1;
         }
         //CHECK A COLLIDE WITH BORDER
         else if ((arow.q[0] == 0) || (arow.q[0] == 31) || (acol.q[0] == 16) || (acol.q[0] == 47)){
@@ -474,15 +481,13 @@ module process (
         }
       }
       //CHECK B COLLISIONS
-      if (~blethal.q){
+      if (~blethal.q & playerb.q){
         //CHECK B COLLIDE WITH APPLE
         if((brow.q[0] == approw.q) && (bcol.q[0] == appcol.q)){
           approw.d = randrow.q;
           appcol.d = randcol.q;
           bapplescore.d = APPLE;
-          if(blen.q < 64 - GROWTH){
-            blen.d = blen.q + GROWTH;
-          }
+          if(~bgrow.q) bgrow.d = 1;
         }
         //CHECK B COLLIDE WITH BORDER
         else if ((brow.q[0] == 0) || (brow.q[0] == 31) || (bcol.q[0] == 16) || (bcol.q[0] == 47)){
@@ -612,7 +617,7 @@ module process (
         2011:
           if(cmp.q == 1){
             ascore.d = 99;
-            state.d = state.GAMEOVER; //END GAME
+            if(playera.q) state.d = state.GAMEOVER; //END GAME
           }
           cmp.d = 0;
         2012: //CHECK IF B SCORE IS > 99
@@ -623,14 +628,28 @@ module process (
         2013:
           if(cmp.q == 1){
             bscore.d = 99;
-            state.d = state.GAMEOVER; //END GAME
+            if(playerb.q) state.d = state.GAMEOVER; //END GAME
           }
           cmp.d = 0;
-        2014:
+        2014: //ADD LENGTHS
+          if(agrow.q){
+            if(alen.q + GROWTH > 64) alen.d = 64;
+            else alen.d = alen.q + GROWTH;
+          }
+          if(bgrow.q){
+            if(blen.q + GROWTH > 64) blen.d = 64;
+            else blen.d = blen.q + GROWTH;
+          }
+        2015:
           if(state.q == state.DEAD) state.d = state.STARTGAME;
       }
       
       
+      if(growclk.q[24]){
+        if (alen.q < 64) alen.d = alen.q + 1;
+        if (blen.q < 64) blen.d = blen.q + 1;
+        growclk.d = 0;
+      }
       if(~playera.q){
         arow.d[0] = 0;
         acol.d[0] = 0;
@@ -661,6 +680,8 @@ module process (
     if(state.q == state.GAMEOVER){
       
     }
+    
+    
     /*****
     CHECK IF CURRENT ROW AND COLUMN IS ON A BORDER
     *****/
@@ -709,13 +730,29 @@ module process (
     if(col < 20 || col > 66) blank = 0;
     else blank = 1;
     
-    if(col < 64){
+    if(col < 65){
       if(row == 0) rowsel = 15;
       else rowsel = row - 1;
     }
     else rowsel = row[3:0];
     
     dclk = ~gclk.q[SPEED];
+    
+    
+    if (~playera.q){
+      aonetop = 0;
+      atentop = 0;
+      aonebot = 0;
+      atenbot = 0;
+      alethal.d = 0;
+    }
+    if (~playerb.q){
+      bonetop = 0;
+      btentop = 0;
+      bonebot = 0;
+      btenbot = 0;
+      blethal.d = 0;
+    }
     
     //DISPLAY OUT
     if (state.q == state.RUN || state.q == state.DEAD || state.q == state.GAMEOVER){
@@ -758,19 +795,6 @@ module process (
       g1 = plane;
       bl1 = plane;
     }
-    if (~playera.q){
-      aonetop = 0;
-      atentop = 0;
-      aonebot = 0;
-      atenbot = 0;
-    }
-    if (~playerb.q){
-      bonetop = 0;
-      btentop = 0;
-      bonebot = 0;
-      btenbot = 0;
-    }
-
     if((row == 0) && (col == 1 || col == 0)){
       r0 = 0;
       g0 = 0;

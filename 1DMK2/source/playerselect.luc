@@ -39,15 +39,15 @@ module playerselect (
     aready = zeros;
     bready = zeros;
     for(numRow = 0; numRow < 32; numRow++){
-      line[numRow] = 64b1100000000000000000000000000000;
+      line[numRow] = 64b1100000000000000000000000000000000;
     }
     for (numRow = 7; numRow < 12; numRow++){
-      a[numRow] = 0 + player1[11 - numRow] << 1;
-      b[numRow] = 0 + player2[11 - numRow] << 33;
+      a[numRow] = 0 + player1[11 - numRow] << 3;
+      b[numRow] = 0 + player2[11 - numRow] << 35;
     }
     for (numRow = 18; numRow < 23; numRow++){
-      if(playera) aready[numRow] = 0 + ready[22 - numRow] << 4;
-      if(playerb) bready[numRow] = 0 + ready[22 - numRow] << 37;
+      if(playera) aready[numRow] = 0 + ready[22 - numRow] << 6;
+      if(playerb) bready[numRow] = 0 + ready[22 - numRow] << 39;
     }
     
     
