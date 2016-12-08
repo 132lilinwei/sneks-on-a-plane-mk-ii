@@ -1,7 +1,7 @@
 module playerselect (
     input playera,
     input playerb,
-    input row[5],
+    input row[4],
     input col[7],
     output lineouttop,
     output lineoutbot,

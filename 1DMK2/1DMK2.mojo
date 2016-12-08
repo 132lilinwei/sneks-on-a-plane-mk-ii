@@ -10,6 +10,7 @@
     <src>control.luc</src>
     <src top="true">mojo_top.luc</src>
     <src>playerselect.luc</src>
+    <src>gameover.luc</src>
     <src>comp.luc</src>
     <src>process.luc</src>
     <src>shifter.luc</src>

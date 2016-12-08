@@ -1,5 +1,5 @@
 module drawer ( //GIVEN ROW, COL AND SCORE, RETURN WHETHER CURRENT CELL HAS SCORE ELEMENT
-    input row[5],
+    input row[4],
     input col[7],
     input ascore[8],
     input bscore[8],

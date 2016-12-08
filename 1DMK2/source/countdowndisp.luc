@@ -1,6 +1,6 @@
 module countdowndisp (
     input number[2],
-    input row[5],
+    input row[4],
     input col[7],
     output cdtop,
     output cdbot

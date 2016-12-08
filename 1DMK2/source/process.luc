@@ -21,20 +21,23 @@ module process (
     output latch,
     output blank,
     output rowsel[4],
-    output dclk
+    output dclk,
+    output startlight,
+    output playeronelight,
+    output playertwolight
   ) {
   
   const SPEED = 3; //HOW FAST TO RUN EACH ONE
-  dff gclk[16](.clk(clk), .rst(rst), #INIT(0)); //GAME CLOCK
+  dff gclk[26](.clk(clk), .rst(rst), #INIT(0)); //GAME CLOCK
   dff growclk[25](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //GROW CLOCK
   dff sclk[20](.clk(gclk.q[12]), .rst(start), #INIT(400000)); //SPEED CLOCK
   dff cclk[22](.clk(gclk.q[SPEED]), .rst(start), #INIT(0)); //COUNTDOWN CLOCK
   dff countdown[2](.clk(gclk.q[SPEED]), .rst(start), #INIT(3)); //COUNTDOWN NUMBER
   
   const GROWTH = 4;
-  const APPLE = 10;
+  const APPLE = 7;
   const COLLIDE = 5;
-  const KILL = 15;
+  const KILL = 11;
   
   //CURRENT ROW AND COL
   
@@ -139,6 +142,7 @@ module process (
   countdowndisp countdowndisp;
   playerselect playerselect;
   title title;
+  gameover gameover;
   
   always {
     gclk.d = gclk.q + 1;
@@ -165,7 +169,9 @@ module process (
     r1 = 0;
     g1 = 0;
     bl1 = 0;
-    
+    startlight = 0;
+    playeronelight = 0;
+    playertwolight = 0;
     
     control.clk = gclk.q[SPEED];
     control.rst = rst;
@@ -194,6 +200,11 @@ module process (
     playerselect.col = col;
     playerselect.playera = playera.q;
     playerselect.playerb = playerb.q;
+    
+    gameover.row = row;
+    gameover.col = col;
+    gameover.ascore = ascore.q;
+    gameover.bscore = bscore.q;
     
     title.row = row;
     title.col = col;
@@ -261,12 +272,15 @@ module process (
       sclk.d = 400000; //RESET MOVEMENT SPEED
       playera.d = 0;
       playerb.d = 0;
+      startlight = gclk.q[25];
       if(start) state.d = state.PLAYERSELECT;
     }    
     if (state.q == state.PLAYERSELECT){
       sclk.d = 400000; //RESET MOVEMENT SPEED
       if(playerone) playera.d = 1;
       if(playertwo) playerb.d = 1;
+      playeronelight = gclk.q[25] | playera.q;
+      playertwolight = gclk.q[25] | playerb.q;
       if(start && (playera.q | playerb.q)) state.d = state.RESETGAME;
     }
     /*****
@@ -279,6 +293,8 @@ module process (
       alen.d = 8; //RESET SNEK LENGTHS
       blen.d = 8;
       growclk.d = 0;
+      playeronelight = playera.q;
+      playertwolight = playerb.q;
       state.d = state.STARTGAME;
     }
     /*****
@@ -287,9 +303,14 @@ module process (
     if (state.q == state.STARTGAME){
       countdown.d = 3;
       cclk.d = 0;
+      playeronelight = playera.q;
+      playertwolight = playerb.q;
       state.d = state.COUNTDOWN;
     }
     if (state.q == state.COUNTDOWN){
+      sclk.d = sclk.q;
+      playeronelight = playera.q;
+      playertwolight = playerb.q;
       counter.d = 0;
       arow.d[0] = 15;
       acol.d[0] = 20;
@@ -326,16 +347,18 @@ module process (
     MOVE BEGIN
     *****/
     if(state.q == state.RUN || state.q == state.DEAD){
+      playeronelight = playera.q;
+      playertwolight = playerb.q;
       if(~alethal.q && ~blethal.q){
         if (move.q){
           for(count = 1; count < 64; count++){
             //MOVE A BODY ELEMENTS
-            if(alen.q > count){
+            if(alen.q >= count){
               arow.d[count] = arow.q[count - 1];
               acol.d[count] = acol.q[count - 1];
             }
             //MOVE B BODY ELEMENTS
-            if(blen.q > count){
+            if(blen.q >= count){
               brow.d[count] = brow.q[count - 1];
               bcol.d[count] = bcol.q[count - 1];
             }
@@ -346,13 +369,13 @@ module process (
             b0001: //SIDES
               if(lastaDirection.q != 2) adir = 0;
               else adir = 2;
-            b0010: adir = 1;
+            b0010:
               if(lastaDirection.q != 3) adir = 1;
               else adir = 3;
-            b0100: adir = 2;
+            b0100: 
               if(lastaDirection.q != 0) adir = 2;
               else adir = 0;
-            b1000: adir = 3;
+            b1000: 
               if(lastaDirection.q != 1) adir = 3;
               else adir = 1;
             b0011: //DIAGONALS
@@ -392,13 +415,13 @@ module process (
             b0001: //SIDES
               if(lastbDirection.q != 2) bdir = 0;
               else bdir = 2;
-            b0010: bdir = 1;
+            b0010: 
               if(lastbDirection.q != 3) bdir = 1;
               else bdir = 3;
-            b0100: bdir = 2;
+            b0100: 
               if(lastbDirection.q != 0) bdir = 2;
               else bdir = 0;
-            b1000: bdir = 3;
+            b1000: 
               if(lastbDirection.q != 1) bdir = 3;
               else bdir = 1;
             b0011: //DIAGONALS
@@ -475,6 +498,8 @@ module process (
         //CHECK A HEAD COLLIDE WITH B HEAD
         if((brow.q[0] == arow.q[0]) & (acol.q[0] == bcol.q[0])){
           alethal.d = 1;
+          aapplescore.d = 0;
+          bapplescore.d = 0;
           state.d = state.DEAD;
           asubscore.d = COLLIDE;
           bsubscore.d = COLLIDE;
@@ -512,6 +537,8 @@ module process (
         //CHECK A HEAD COLLIDE WITH B HEAD
         if((brow.q[0] == arow.q[0]) & (acol.q[0] == bcol.q[0])){
           blethal.d = 1;
+          aapplescore.d = 0;
+          bapplescore.d = 0;
           state.d = state.DEAD;
           asubscore.d = COLLIDE;
           bsubscore.d = COLLIDE;
@@ -612,7 +639,7 @@ module process (
         2010: //CHECK IF A SCORE IS > 99
           alu.a = 99;
           alu.b = ascore.q;
-          alu.c = b110101;
+          alu.c = b110111;
           cmp.d = alu.out[0];
         2011:
           if(cmp.q == 1){
@@ -623,7 +650,7 @@ module process (
         2012: //CHECK IF B SCORE IS > 99
           alu.a = 99;
           alu.b = bscore.q;
-          alu.c = b110101;
+          alu.c = b110111;
           cmp.d = alu.out[0];
         2013:
           if(cmp.q == 1){
@@ -633,28 +660,28 @@ module process (
           cmp.d = 0;
         2014: //ADD LENGTHS
           if(agrow.q){
-            if(alen.q + GROWTH > 64) alen.d = 64;
+            if(alen.q > 63 - GROWTH) alen.d = 63;
             else alen.d = alen.q + GROWTH;
+            agrow.d = 0;
           }
           if(bgrow.q){
-            if(blen.q + GROWTH > 64) blen.d = 64;
+            if(blen.q > 63 - GROWTH) blen.d = 63;
             else blen.d = blen.q + GROWTH;
+            bgrow.d = 0;
           }
         2015:
           if(state.q == state.DEAD) state.d = state.STARTGAME;
       }
       
       
-      if(growclk.q[24]){
-        if (alen.q < 64) alen.d = alen.q + 1;
-        if (blen.q < 64) blen.d = blen.q + 1;
+      if(growclk.q[24] && counter.q != 2014){
+        if (alen.q < 63) alen.d = alen.q + 1;
+        if (blen.q < 63) blen.d = blen.q + 1;
         growclk.d = 0;
       }
       if(~playera.q){
-        arow.d[0] = 0;
-        acol.d[0] = 0;
         alen.d = 0;
-        for(count = 1; count < 64; count++){
+        for(count = 0; count < 64; count++){
           arow.d[count] = 0;
           acol.d[count] = 0;
         }
@@ -664,10 +691,8 @@ module process (
         asubscore.d = 0;
       }
       if(~playerb.q){
-        brow.d[0] = 0;
-        bcol.d[0] = 0;
         blen.d = 0;
-        for(count = 1; count < 64; count++){
+        for(count = 0; count < 64; count++){
           brow.d[count] = 0;
           bcol.d[count] = 0;
         }
@@ -678,7 +703,9 @@ module process (
       }
     }
     if(state.q == state.GAMEOVER){
-      
+      playeronelight = gclk.q[25];
+      playertwolight = gclk.q[25];
+      if(playerone | playertwo) state.d = state.TITLE;
     }
     
     
@@ -731,8 +758,7 @@ module process (
     else blank = 1;
     
     if(col < 65){
-      if(row == 0) rowsel = 15;
-      else rowsel = row - 1;
+      rowsel = row - 1;
     }
     else rowsel = row[3:0];
     
@@ -757,9 +783,9 @@ module process (
     //DISPLAY OUT
     if (state.q == state.RUN || state.q == state.DEAD || state.q == state.GAMEOVER){
       r0 = walltop.q | (|appletop.q);
-      g0 = walltop.q | (|btop.q) | bonetop | btentop;
-      bl0 = walltop.q | (|atop.q) | aonetop | atentop;
-      r1 = wallbot.q | (|applebot.q);
+      g0 = walltop.q | (|btop.q) | bonetop | btentop | gameover.playerbout;
+      bl0 = walltop.q | (|atop.q) | aonetop | atentop | gameover.playeraout;
+      r1 = wallbot.q | (|applebot.q) | gameover.winout;
       g1 = wallbot.q | (|bbot.q) | bonebot | btenbot;
       bl1 = wallbot.q | (|abot.q) | aonebot | atenbot;
     }

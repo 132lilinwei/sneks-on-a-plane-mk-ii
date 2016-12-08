@@ -1,0 +1,51 @@
+module gameover (
+    input row[4],
+    input col[7],
+    input ascore[8],
+    input bscore[8],
+    output playeraout,
+    output playerbout,
+    output winout
+  ) {
+  
+  sig player1[5][28];
+  sig player2[5][28];
+  sig win[8][24];
+  sig winarr[32][64];
+  sig player[32][64];
+  sig zeros[32][64];
+  var numRow;
+
+  always {
+    zeros = {64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0,64b0};
+    winarr = zeros;
+    player = zeros;
+    playeraout = 0;
+    playerbout = 0;
+    winout = 0;
+    
+    player1 = {$reverse(28b1110100011101010111011100010), $reverse(28b1010100010101010100010100110), $reverse(28b1110100011101110111011000010), $reverse(28b1000100010100100100010100010), $reverse(28b1000111010100100111010100111)};
+    player2 ={$reverse(28b1110100011101010111011100111), $reverse(28b1010100010101010100010100001), $reverse(28b1110100011101110111011000111), $reverse(28b1000100010100100100010100100), $reverse(28b1000111010100100111010100111)};
+    win = {b110110001101111011000011, b110110011101111011000011, b110110111100110011000011, b110111111100110011011011, b110111101100110011111111, b000111001100110011111111, b110110001101111011100111, b110110001101111011000011};
+    
+
+    for (numRow = 7; numRow < 12; numRow++){
+      if(ascore >= 99){
+        player[numRow] = 0 + player1[11 - numRow] << 19;
+      }
+      if(bscore >= 99){
+        player[numRow] = 0 + player2[11 - numRow] << 19;
+      }
+    }
+    for (numRow = 18; numRow < 26; numRow++){
+      winarr[numRow] = 0 + win[25 - numRow] << 21;
+    }
+    
+    
+    
+    if(ascore >= 99) playeraout = player[row][col];
+    if(bscore >= 99) playerbout = player[row][col];
+    if(ascore >= 99 || bscore >= 99) winout = winarr[row+16][col];
+    
+  }
+}

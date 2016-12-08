@@ -34,7 +34,10 @@ module mojo_top (
     output rowsel2,
     output rowsel3,
     output dispclk,
-    output blank
+    output blank,
+    output startlight,
+    output playeronelight,
+    output playertwolight
   ) {
   
   sig rst;                  // reset signal
@@ -82,6 +85,9 @@ module mojo_top (
     rowsel2 = process.rowsel[2];
     rowsel3 = process.rowsel[3];
     dispclk = process.dclk;
+    startlight = process.startlight;
+    playeronelight = process.playeronelight;
+    playertwolight = process.playertwolight;
     
   }
 }
