@@ -25,3 +25,4 @@ NET "playerone" LOC = P66 | IOSTANDARD = LVTTL | PULLUP;
 NET "playeronelight" LOC = P58 | IOSTANDARD = LVCMOS33;
 NET "playertwo" LOC = P74 | IOSTANDARD = LVTTL | PULLUP;
 NET "playertwolight" LOC = P58 | IOSTANDARD = LVCMOS33;
+NET "reset" LOC = P83 | IOSTANDARD = LVTTL | PULLUP;

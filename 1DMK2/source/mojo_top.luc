@@ -22,6 +22,7 @@ module mojo_top (
     input start,
     input playerone,
     input playertwo,
+    input reset,
     output r0,
     output r1,
     output g0,
@@ -70,6 +71,7 @@ module mojo_top (
     process.joystickbDown = joystickbDown;
     process.clk = clk;
     process.rst = rst;
+    process.reset = ~reset;
     process.playerone = ~playerone;
     process.playertwo = ~playertwo;
     r0 = process.r0;

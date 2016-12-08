@@ -12,6 +12,7 @@ module process (
     input joystickbRight,
     input playerone,
     input playertwo,
+    input reset,
     output r0,
     output g0,
     output bl0,
@@ -829,6 +830,8 @@ module process (
       g1 = 0;
       bl1 = 0;
     }
+    
+    if(reset) state.d = state.TITLE;
     
 
   
