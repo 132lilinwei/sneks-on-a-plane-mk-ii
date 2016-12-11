@@ -60,7 +60,7 @@ module mojo_top (
     spi_channel = bzzzz;    // not using flags
     avr_rx = bz;            // not using serial port
     
-    process.start = ~start;
+    process.startbutton = ~start;
     process.joystickaLeft = joystickaLeft;
     process.joystickaUp = joystickaUp;
     process.joystickaRight = joystickaRight;
@@ -72,8 +72,8 @@ module mojo_top (
     process.clk = clk;
     process.rst = rst;
     process.reset = ~reset;
-    process.playerone = ~playerone;
-    process.playertwo = ~playertwo;
+    process.playeronebutton = ~playerone;
+    process.playertwobutton = ~playertwo;
     r0 = process.r0;
     g0 = process.g0;
     bl0 = process.bl0;
