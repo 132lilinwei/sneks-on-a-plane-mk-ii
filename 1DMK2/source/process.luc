@@ -77,17 +77,15 @@ module process (
   dff rbot(.clk(gclk.q[SPEED]), .rst(rst));
   
   //DIRECTIONS
-  edge_detector adirection[4](.clk(gclk.q[SPEED]), #RISE(1), #FALL(0)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN so {0011} is up and left diagonally
-  edge_detector bdirection[4](.clk(gclk.q[SPEED]), #RISE(1), #FALL(0)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
-  button_conditioner ainput[4](.clk(clk));
-  button_conditioner binput[4](.clk(clk));
+  dff adirection[4](.clk(clk), .rst(rst), #INIT(b0100)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN so {0011} is up and left diagonally
+  dff bdirection[4](.clk(clk), .rst(rst), #INIT(b0001)); //INDEX 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
   
   dff lastaDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b10)); // 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
   dff lastbDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b00));
-  dff nextaDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b10)); // 0 = LEFT, 1 = UP, 2 = RIGHT, 3 = DOWN
-  dff nextbDirection[2](.clk(gclk.q[SPEED]), .rst(rst), #INIT(b00));
   
-  
+  sig adir[2];
+  sig bdir[2];
+ 
   //SCORE ELEMENTS
   dff ascore[8](.clk(gclk.q[SPEED]), .rst(rst), #INIT(8b0));
   dff bscore[8](.clk(gclk.q[SPEED]), .rst(rst), #INIT(8b0));
@@ -169,14 +167,6 @@ module process (
     startb.in = startbutton;
     playeroneb.in = playeronebutton;
     playertwob.in = playertwobutton;
-    ainput.in[0] = ~joystickaLeft;
-    ainput.in[1] = ~joystickaUp;
-    ainput.in[2] = ~joystickaRight;
-    ainput.in[3] = ~joystickaDown;
-    binput.in[0] = ~joystickbLeft;
-    binput.in[1] = ~joystickbUp;
-    binput.in[2] = ~joystickbRight;
-    binput.in[3] = ~joystickbDown;
     
     /*
     EDGE DETECTOR INPUTS
@@ -265,10 +255,11 @@ module process (
     bapplescore.d = bapplescore.q;
     bsubscore.d = bsubscore.q;
     
-    nextaDirection.d = nextaDirection.q;
-    nextbDirection.d = nextbDirection.q;
     lastaDirection.d = lastaDirection.q;
     lastbDirection.d = lastbDirection.q;
+    
+    adirection.d = adirection.q;
+    bdirection.d = bdirection.q;
     
     /*
     GAME TIME CONTROL
@@ -290,8 +281,18 @@ module process (
     }
 
     //JOYSTICK INPUT 
-    for(count = 0; count < 4; count++) adirection.in[count] = ainput.out[count];
-    for(count = 0; count < 4; count++) bdirection.in[count] = binput.out[count];
+    if(~joystickaLeft | ~joystickaUp | ~joystickaRight | ~joystickaDown){
+      adirection.d[0] = ~joystickaLeft;
+      adirection.d[1] = ~joystickaUp;
+      adirection.d[2] = ~joystickaRight;
+      adirection.d[3] = ~joystickaDown;
+    }
+    if(~joystickbLeft | ~joystickbUp | ~joystickbRight | ~joystickbDown){
+      bdirection.d[0] = ~joystickbLeft;
+      bdirection.d[1] = ~joystickbUp;
+      bdirection.d[2] = ~joystickbRight;
+      bdirection.d[3] = ~joystickbDown;
+    }
     
     if (state.q == state.TITLE){
       playera.d = 1;
@@ -364,8 +365,8 @@ module process (
       appcol.d = randcol.q;
       lastaDirection.d = 2;
       lastbDirection.d = 0;
-      nextaDirection.d = 2;
-      nextbDirection.d = 0;
+      adirection.d = b0100;
+      bdirection.d = b0001;
       move.d = 1;
       aaddscore.d = 0;
       aapplescore.d = 0;
@@ -383,17 +384,6 @@ module process (
     if(state.q == state.RUN || state.q == state.DEAD || state.q == state.TITLE){
       playeronelight = playera.q;
       playertwolight = playerb.q;
-      //DEFINE A DIRECTION
-      if(adirection.out[0] & (lastaDirection.q != 2)) nextaDirection.d = 0;
-      if(adirection.out[1] & (lastaDirection.q != 3)) nextaDirection.d = 1;
-      if(adirection.out[2] & (lastaDirection.q != 0)) nextaDirection.d = 2;
-      if(adirection.out[3] & (lastaDirection.q != 1)) nextaDirection.d = 3;
-          
-      //DEFINE B DIRECTION
-      if(bdirection.out[0] & (lastbDirection.q != 2)) nextbDirection.d = 0;
-      if(bdirection.out[1] & (lastbDirection.q != 3)) nextbDirection.d = 1;
-      if(bdirection.out[2] & (lastbDirection.q != 0)) nextbDirection.d = 2;
-      if(bdirection.out[3] & (lastbDirection.q != 1)) nextbDirection.d = 3;
       
       if(~alethal.q && ~blethal.q){
         if (move.q){
@@ -410,23 +400,96 @@ module process (
             }
           }
           
+          //DEFINE A DIRECTION
+          case(adirection.q){
+            b0001: //SIDES
+              if(lastaDirection.q != 2) adir = 0;
+              else adir = 2;
+            b0010:
+              if(lastaDirection.q != 3) adir = 1;
+              else adir = 3;
+            b0100: 
+              if(lastaDirection.q != 0) adir = 2;
+              else adir = 0;
+            b1000: 
+              if(lastaDirection.q != 1) adir = 3;
+              else adir = 1;
+            b0011: //DIAGONALS
+    				  if(lastaDirection.q == 0) adir = 1;
+    				  else if(lastaDirection.q != 2) adir = 0;
+    				  else if(lastaDirection.q != 3) adir = 1;
+    				  else adir = lastaDirection.q;
+            b0110:
+    				  if(lastaDirection.q == 1) adir = 2;
+    				  else if(lastaDirection.q != 3) adir = 1;
+    				  else if(lastaDirection.q != 0) adir = 2;
+    				  else adir = lastaDirection.q;
+            b1100:
+    				  if(lastaDirection.q == 2) adir = 3;
+    				  else if(lastaDirection.q != 0) adir = 2;
+    				  else if(lastaDirection.q != 1) adir = 3;
+    				  else adir = lastaDirection.q;
+            b1001:
+    				  if(lastaDirection.q == 3) adir = 0;
+    				  else if(lastaDirection.q != 1) adir = 3;
+    				  else if(lastaDirection.q != 2) adir = 0;
+    				  else adir = lastaDirection.q;
+            default: adir = lastaDirection.q;
+          }
+          lastaDirection.d = adir;
           //MOVE A HEAD
-          case(nextaDirection.q){
+          case(adir){
             0: acol.d[0] = acol.q[0] - 1;
             1: arow.d[0] = arow.q[0] - 1;
             2: acol.d[0] = acol.q[0] + 1;
             3: arow.d[0] = arow.q[0] + 1;
           }
           
+          
+          //DEFINE B DIRECTION
+          case(bdirection.q){
+            b0001: //SIDES
+              if(lastbDirection.q != 2) bdir = 0;
+              else bdir = 2;
+            b0010: 
+              if(lastbDirection.q != 3) bdir = 1;
+              else bdir = 3;
+            b0100: 
+              if(lastbDirection.q != 0) bdir = 2;
+              else bdir = 0;
+            b1000: 
+              if(lastbDirection.q != 1) bdir = 3;
+              else bdir = 1;
+            b0011: //DIAGONALS
+              if(lastbDirection.q == 0) bdir = 1;
+              else if(lastbDirection.q != 2) bdir = 0;
+              else if(lastbDirection.q != 3) bdir = 1;
+              else bdir = lastbDirection.q;
+            b0110:
+              if(lastbDirection.q == 1) bdir = 2;
+              else if(lastbDirection.q != 3) bdir = 1;
+              else if(lastbDirection.q != 0) bdir = 2;
+              else bdir = lastbDirection.q;
+            b1100:
+              if(lastbDirection.q == 2) bdir = 3;
+              else if(lastbDirection.q != 0) bdir = 2;
+              else if(lastbDirection.q != 1) bdir = 3;
+              else bdir = lastbDirection.q;
+            b1001:
+              if(lastbDirection.q == 3) bdir = 0;
+              else if(lastbDirection.q != 1) bdir = 3;
+              else if(lastbDirection.q != 2) bdir = 0;
+              else bdir = lastbDirection.q;
+            default: bdir = lastbDirection.q;
+          }
+          lastbDirection.d = bdir;
           //MOVE B HEAD
-          case(nextbDirection.q){
+          case(bdir){
             0: bcol.d[0] = bcol.q[0] - 1;
             1: brow.d[0] = brow.q[0] - 1;
             2: bcol.d[0] = bcol.q[0] + 1;
             3: brow.d[0] = brow.q[0] + 1;
           }
-          lastaDirection.d = nextaDirection.q;
-          lastbDirection.d = nextbDirection.q;
           
           move.d = 0;
           
@@ -678,7 +741,28 @@ module process (
     }
     if(state.q == state.GAMEOVER){
       startlight = gclk.q[25];
-      if(start.out) state.d = state.TITLE;
+      if(start.out){
+        state.d = state.TITLE;
+        counter.d = 0;
+        arow.d[0] = 26;
+        acol.d[0] = 20;
+        brow.d[0] = 28;
+        bcol.d[0] = 43;
+        for(count = 1; count < 64; count++){
+          arow.d[count] = 0;
+          acol.d[count] = 0;
+          brow.d[count] = 0;
+          bcol.d[count] = 0;
+        }
+        alethal.d = 0;
+        blethal.d = 0;
+        lastaDirection.d = 2;
+        lastbDirection.d = 0;
+        adirection.d = b0100;
+        bdirection.d = b0001;
+        alen.d = 63;
+        blen.d = 63;
+      }
     }
     
     
@@ -823,8 +907,8 @@ module process (
       blethal.d = 0;
       lastaDirection.d = 2;
       lastbDirection.d = 0;
-      nextaDirection.d = 2;
-      nextbDirection.d = 0;
+      adirection.d = b0100;
+      bdirection.d = b0001;
       alen.d = 63;
       blen.d = 63;
     }
