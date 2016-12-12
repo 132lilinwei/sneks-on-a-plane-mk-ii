@@ -808,13 +808,13 @@ module process (
     /*****
     DISPLAY CONTROLLER
     *****/
-    if(col == 64) latch = 1;
+    if(col == 64) latch = gclk.q[SPEED];
     else latch = 0;
     
-    if(col < 20 || col > 66) blank = 0;
+    if(col > 67 && col < 70) blank = 0;
     else blank = 1;
     
-    if(col < 65){
+    if(col < 32){
       rowsel = row - 1;
     }
     else rowsel = row[3:0];

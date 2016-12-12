@@ -15,10 +15,10 @@
     <src>process.luc</src>
     <src>shifter.luc</src>
     <src>arithmetic.luc</src>
-    <src>adder.luc</src>
     <src>countdowndisp.luc</src>
-    <ucf>custom.ucf</ucf>
+    <src>adder.luc</src>
     <ucf lib="true">mojo.ucf</ucf>
+    <ucf>custom.ucf</ucf>
     <component>reset_conditioner.luc</component>
     <component>pipeline.luc</component>
     <component>button_conditioner.luc</component>
