@@ -630,7 +630,7 @@ module process (
             alu.a = ascore.q;
             alu.b = aaddscore.q;
             alu.c = b000000;
-            ascore.d = alu.out[7:0];
+            if(~alethal.q) ascore.d = alu.out[7:0];
             aaddscore.d = 0;
           2002: //SUBTRACT A COLLIDE SCORE
             alu.a = ascore.q;
@@ -656,7 +656,7 @@ module process (
             alu.a = bscore.q;
             alu.b = baddscore.q;
             alu.c = b000000;
-            bscore.d = alu.out[7:0];
+            if(~blethal.q) bscore.d = alu.out[7:0];
             baddscore.d = 0;
           2007: //SUBTRACT B COLLIDE SCORE
             alu.a = bscore.q;
@@ -808,13 +808,13 @@ module process (
     /*****
     DISPLAY CONTROLLER
     *****/
-    if(col == 64) latch = gclk.q[SPEED];
+    if(col == 64) latch = 1;
     else latch = 0;
     
-    if(col > 67 && col < 70) blank = 0;
+    if(col < 10 || col > 70) blank = 0;
     else blank = 1;
     
-    if(col < 32){
+    if(col < 65){
       rowsel = row - 1;
     }
     else rowsel = row[3:0];
