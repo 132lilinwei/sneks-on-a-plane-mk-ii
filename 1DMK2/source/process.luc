@@ -28,10 +28,12 @@ module process (
     output playertwolight
   ) {
   
-  const SPEED = 3; //HOW FAST TO RUN EACH ONE
+  const SPEED = 8; //HOW FAST TO RUN EACH ONE //ORIGINALLY 3
+  const SCLK = 12500; //ORIGINALLY 400000
+  const NXT = 7500; //ORIGINALLY 240000
   dff gclk[26](.clk(clk), .rst(rst), #INIT(0)); //GAME CLOCK
   dff growclk[25](.clk(gclk.q[SPEED]), .rst(startbutton), #INIT(0)); //GROW CLOCK
-  dff sclk[20](.clk(gclk.q[12]), .rst(startbutton), #INIT(400000)); //SPEED CLOCK
+  dff sclk[20](.clk(gclk.q[SPEED + 9]), .rst(rst), #INIT(SCLK)); //SPEED CLOCK
   dff cclk[22](.clk(gclk.q[SPEED]), .rst(startbutton), #INIT(0)); //COUNTDOWN CLOCK
   dff countdown[2](.clk(gclk.q[SPEED]), .rst(startbutton), #INIT(3)); //COUNTDOWN NUMBER
   
@@ -179,7 +181,7 @@ module process (
     COUNTDOWN CONTROLLER
     */
     cclk.d = cclk.q + 1;
-    if (cclk.q == 1000000){
+    if (cclk.q == NXT * 4){ //ORIGINALLY 1000000
       cclk.d = 0;
       countdown.d = countdown.q - 1;
     }
@@ -264,7 +266,7 @@ module process (
     /*
     GAME TIME CONTROL
     */
-    if ((counter.q >= 210000) && (counter.q > sclk.q)){
+    if ((counter.q >= NXT) && (counter.q > sclk.q)){
       move.d = 1;
       counter.d = 0;
       aaddscore.d = 0;
@@ -310,7 +312,7 @@ module process (
       }
     }    
     if (state.q == state.PLAYERSELECT){
-      sclk.d = 400000; //RESET MOVEMENT SPEED
+      sclk.d = SCLK; //RESET MOVEMENT SPEED
       if(playerone.out) playera.d = ~playera.q;
       if(playertwo.out) playerb.d = ~playerb.q;
       playeronelight = ~gclk.q[25] | playera.q;
@@ -324,7 +326,7 @@ module process (
     if (state.q == state.RESETGAME){
       ascore.d = 0;
       bscore.d = 0;
-      sclk.d = 400000; //RESET MOVEMENT SPEED
+      sclk.d = SCLK; //RESET MOVEMENT SPEED
       alen.d = 8; //RESET SNEK LENGTHS
       blen.d = 8;
       growclk.d = 0;
@@ -811,7 +813,7 @@ module process (
     if(col == 64) latch = 1;
     else latch = 0;
     
-    if(col < 10 || col > 70) blank = 0;
+    if(col < 5 || col > 75) blank = 0;
     else blank = 1;
     
     if(col < 65){
@@ -877,9 +879,9 @@ module process (
       r1 = plane;
       g1 = plane | (|bbot.q);
       bl1 = plane | (|abot.q);
-      playeronelight = gclk.q[25];
-      playertwolight = ~gclk.q[25];
-      startlight = 1;
+      playeronelight = 0;
+      playertwolight = 0;
+      startlight = gclk.q[25];
     }
     if((row == 0) && (col == 1 || col == 0)){
       r0 = 0;
